@@ -60,94 +60,91 @@ function AntiPagination(window) {
 
 	function $(id) document.getElementById(id);
 
-	var antipagination = {
-		blast: function(num, isslide) {
-			var focusElement = document.commandDispatcher.focusedElement;
-			if (!focusElement) {
-				throw new Error("No focus element");
-			}
-			var doc = focusElement.ownerDocument;
-			var repaginator = new Repaginator();
+	function blast(num, isslide) {
+		var focusElement = document.commandDispatcher.focusedElement;
+		if (!focusElement) {
+			throw new Error("No focus element");
+		}
+		var doc = focusElement.ownerDocument;
+		var repaginator = new Repaginator();
 
-			if (isslide && num) {
-				repaginator.seconds = num;
-				repaginator.slideshow = true;
-				repaginator.nolimit = true;
-			}
-			else if (num) {
-				repaginator.slideshow = false;
-				repaginator.pagelimit = num;
-				repaginator.nolimit = false;
-			}
-			else {
-				repaginator.slideshow = false;
-				repaginator.nolimit = true;
-			}
-			var searchpathtext = '';
-			var range = doc.createRange();
-			range.selectNode(focusElement);
-			searchpathtext = range.toString();
+		if (isslide && num) {
+			repaginator.seconds = num;
+			repaginator.slideshow = true;
+			repaginator.nolimit = true;
+		}
+		else if (num) {
+			repaginator.slideshow = false;
+			repaginator.pagelimit = num;
+			repaginator.nolimit = false;
+		}
+		else {
+			repaginator.slideshow = false;
+			repaginator.nolimit = true;
+		}
+		var searchpathtext = '';
+		var range = doc.createRange();
+		range.selectNode(focusElement);
+		searchpathtext = range.toString();
 
-			repaginator.query = '//body';
-			if (searchpathtext) {
-				repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
-			}
-			else {
-				if (focusElement.getAttribute('value'))	{
-					var input_value = focusElement.getAttribute('value');
+		repaginator.query = '//body';
+		if (searchpathtext) {
+			repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
+		}
+		else {
+			if (focusElement.getAttribute('value'))	{
+				var input_value = focusElement.getAttribute('value');
 
-					if (input_value) {
-						repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
-					}
+				if (input_value) {
+					repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
 				}
-				else if (focusElement.getAttribute('src')) {
-					var img_src = focusElement.getAttribute('src');
+			}
+			else if (focusElement.getAttribute('src')) {
+				var img_src = focusElement.getAttribute('src');
 
-					if (img_src)	{
+				if (img_src)	{
+					repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+				}
+			}
+			else if (focusElement instanceof window.HTMLAnchorElement) {
+				var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
+				if (srcObj) {
+					var img_src = srcObj.getAttribute('src');
+					if (img_src) {
 						repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
 					}
 				}
-				else if (focusElement instanceof window.HTMLAnchorElement) {
-					var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
-					if (srcObj) {
-						var img_src = srcObj.getAttribute('src');
-						if (img_src) {
-							repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
-						}
-					}
-				}
-			}
-
-			repaginator.numberToIncrement = null;
-			repaginator.attemptToIncrement = false;
-
-			if (!regx2Numbers.test(repaginator.query))	{
-				var test = regxNumber.exec(repaginator.query);
-				if (test)	{
-					repaginator.attemptToIncrement = true;
-					repaginator.numberToIncrement = test[0];
-				}
-			}
-
-			repaginator.blast(doc.defaultView);
-		},
-
-		stop: function() {
-			if (!window.gContextMenu || !window.gContextMenu.target) {
-				var body = window.content.document.getElementsByTagName('body')[0];
-				if (body) {
-					body.setAttribute('antipagination','isOff');
-				}
-			}
-			else {
-				var doc = window.gContextMenu.target.ownerDocument;
-				var body = doc.getElementsByTagName('body')[0];
-				if (body) {
-					body.setAttribute('antipagination','isOff');
-				}
 			}
 		}
-	};
+
+		repaginator.numberToIncrement = null;
+		repaginator.attemptToIncrement = false;
+
+		if (!regx2Numbers.test(repaginator.query))	{
+			var test = regxNumber.exec(repaginator.query);
+			if (test)	{
+				repaginator.attemptToIncrement = true;
+				repaginator.numberToIncrement = test[0];
+			}
+		}
+
+		repaginator.blast(doc.defaultView);
+	}
+	function stop() {
+		if (!window.gContextMenu || !window.gContextMenu.target) {
+			var body = window.content.document.getElementsByTagName('body')[0];
+			if (body) {
+				body.setAttribute('antipagination','isOff');
+			}
+		}
+		else {
+			var doc = window.gContextMenu.target.ownerDocument;
+			var body = doc.getElementsByTagName('body')[0];
+			if (body) {
+				body.setAttribute('antipagination','isOff');
+			}
+		}
+	}
 
 	let menu = $('antipagination_menu');
 	let contextMenu = $('contentAreaContextMenu');
@@ -178,11 +175,11 @@ function AntiPagination(window) {
 
 	// All
 	$('antipagination_flatten_nolimit').addEventListener('command', function(event) {
-		antipagination.blast();
+		blast();
 	}, true);
 	// Stop
 	$('antipagination_stop').addEventListener('command', function(event) {
-		antipagination.stop();
+		stop();
 	}, true);
 	// Limit
 	$('antipagination_flat_limit_menu').addEventListener('command', function(event) {
@@ -190,7 +187,7 @@ function AntiPagination(window) {
 		if (t.localName != 'menuitem') {
 			return;
 		}
-		antipagination.blast(parseInt(t.getAttribute('label'), 10));
+		blast(parseInt(t.getAttribute('label'), 10));
 	}, true);
 	// Slideshow
 	$('antipagination_flat_nolimit_slide').addEventListener('command', function(event) {
@@ -198,7 +195,7 @@ function AntiPagination(window) {
 		if (t.localName != 'menuitem') {
 			return;
 		}
-		antipagination.blast(parseInt(t.getAttribute('value'), 10), true);
+		blast(parseInt(t.getAttribute('value'), 10), true);
 	}, true);
 }
 

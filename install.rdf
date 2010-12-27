@@ -6,7 +6,9 @@ xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 		<em:name>Re-Pagination</em:name>
 		<em:version>2010.12.27</em:version>
 		<em:description>Right click &quot;next&quot; or &quot;previous&quot; or &quot;2&quot; link and flatten all results to one page. Ex. Search Results Page. There is also a slide show option.</em:description>
-		<em:creator>Lev, Omar</em:creator>
+		<em:creator>Nils Maier</em:creator>
+		<em:developer>Nils Maier</em:developer>
+		<em:developer>Lev, Omar</em:developer>
 
 		<em:targetApplication>
 			<Description>

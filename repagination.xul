@@ -1,14 +1,10 @@
 <?xml version="1.0"?>
-<overlay id="repagination"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	>
+<overlay id="repagination" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<script type="application/x-javascript"><![CDATA[
 		addEventListener('load', function() {
 			removeEventListener('load', arguments.callee, true);
 			let _m = {};
-			Components.utils.import("resource://repagination/module.jsm", _m);
+			Components.utils.import("resource://repagination/bootstrap.js", _m);
 			_m.repagination(window);
 		}, true);
 	]]></script>

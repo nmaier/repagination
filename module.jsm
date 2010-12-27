@@ -43,20 +43,19 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const reportError = Cu.reportError;
 
+const regxNumber = /[0-9]+/;
+const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
+
 function AntiPagination(window) {
 	var document = window.document;
-	
+
 	var antipagination = {
-		regxNumber: /[0-9]+/,
-		regx2Numbers: /[0-9]+[^0-9][0-9]+/,
-		blast: function(num,isslide) {	try {
+		blast: function(num,isslide) {
 			var focusElement = document.commandDispatcher.focusedElement;
 			if (focusElement == null) {
 				throw new Error("No focus element");
 			}
 			var doc = focusElement.ownerDocument;
-			/* inject script */
-			
 			var repaginator = new Repaginator();
 
 			if(isslide != null && num != null) {
@@ -77,52 +76,51 @@ function AntiPagination(window) {
 			var range = doc.createRange();
 			range.selectNode(focusElement);
 			searchpathtext = range.toString();
-			var query = '//body';
-			if(searchpathtext != null && searchpathtext != '') {
-				query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
+
+			repaginator.query = '//body';
+			if (!searchpathtext) {
+				repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
 			}
 			else {
-				if(focusElement.getAttribute('value') != '' && 
-					focusElement.getAttribute('value') != null)	{
+				if (focusElement.getAttribute('value') != ''
+					&& focusElement.getAttribute('value') != null)	{
 					var input_value = focusElement.getAttribute('value');
 
-					if(input_value != '') {
-						query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
+					if (input_value) {
+						repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
 					}
 				}
-				else if(focusElement.getAttribute('src') != '' && 
-					focusElement.getAttribute('src') != null) {
+				else if (focusElement.getAttribute('src') != ''
+					&& focusElement.getAttribute('src') != null) {
 					var img_src = focusElement.getAttribute('src');
 
-					if(img_src != '')	{
-						query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+					if (img_src)	{
+						repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
 					}
 				}
-				else if(focusElement instanceof HTMLAnchorElement) {
-					/* get src */
-					var srcObj = antipagination.returnFirstSnapshot(doc, focusElement, 'child::*[@src]');
-					if(srcObj != null) {
+				else if (focusElement instanceof HTMLAnchorElement) {
+					var srcObj = this.returnFirstSnapshot(doc, focusElement, 'child::*[@src]');
+					if (srcObj) {
 						var img_src = srcObj.getAttribute('src');
-
-						if(img_src != '') {
-							query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+						if (img_src) {
+							repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
 						}
-					}	
+					}
 				}
 			}
-			repaginator.query = query;
+
 			repaginator.numberToIncrement = null;
 			repaginator.attemptToIncrement = false;
-			
-			if (!this.regx2Numbers.test(query))	{
-				var test = this.regxNumber.exec(query);
+
+			if (!regx2Numbers.test(query))	{
+				var test = regxNumber.exec(query);
 				if (test)	{
 					repaginator.attemptToIncrement = true;
 					repaginator.numberToIncrement = test[0];
 				}
 			}
+
 			repaginator.blast(doc.defaultView);
-		} catch (ex) { reportError(ex); }
 		},
 
 		returnFirstSnapshot: function (doc,node,query) {
@@ -132,7 +130,7 @@ function AntiPagination(window) {
 		},
 		stop: function() {
 			if(window.gContextMenu == null
-				|| window.gContextMenu.target == null) {			
+				|| window.gContextMenu.target == null) {
 				var body = window._content.document.getElementsByTagName('body')[0];
 				if(body != null) {
 					body.setAttribute('antipagination','isOff');
@@ -141,7 +139,7 @@ function AntiPagination(window) {
 			else {
 				var doc = window.gContextMenu.target.ownerDocument;
 				var body = doc.getElementsByTagName('body')[0];
-			
+
 				if(body != null) {
 					body.setAttribute('antipagination','isOff');
 				}
@@ -152,7 +150,7 @@ function AntiPagination(window) {
 				.getElementById('antipagination_menu');
 			var contextMenu = document
 				.getElementById('contentAreaContextMenu');
-			contextMenu.addEventListener('popupshowing', 
+			contextMenu.addEventListener('popupshowing',
 				antipagination.popupshowing, true);
 		},
 		popupshowing: function()	{
@@ -160,10 +158,10 @@ function AntiPagination(window) {
 				antipagination.menu.hidden = false;
 				return;
 			}
-			
+
 			var doc = window.gContextMenu.target.ownerDocument;
 			var body = doc.getElementsByTagName('body')[0];
-			
+
 			if(body == null) {
 				antipagination.menu.hidden = true;
 				return;
@@ -204,7 +202,7 @@ Repaginator.prototype = {
 		return item;
 	},
 
-	blast: function(win) {	
+	blast: function(win) {
 		try	{
 			var xresult = win.document
 					.evaluate(
@@ -234,7 +232,7 @@ Repaginator.prototype = {
 			reportError(ex);
 		}
 	},
-	
+
 	beforeNum: '',
 	afterNum: '',
 	numStr: '',
@@ -304,10 +302,10 @@ Repaginator.prototype = {
 				}
 				if(
 					(
-					(this.nolimit == false) 
+					(this.nolimit == false)
 					&& (this.pagecounter <
 					this.pagelimit)
-					 ) 
+					 )
 					|| this.nolimit == true
 				) {
 					var niframe = element.ownerDocument.createElement('iframe');

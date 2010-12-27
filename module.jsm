@@ -50,6 +50,11 @@ function getFirstSnapshot(doc,node,query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
 
+if (!'setTimeout' in this) {
+	let Timer = Components.Constructor('@mozilla.org/timer;1', 'nsITimer', 'init');
+	this.setTimeout = function(fun, timeout) new Timer({observe: function() fun()}, timeout, 0);
+}
+
 function AntiPagination(window) {
 	var document = window.document;
 
@@ -180,7 +185,6 @@ function Repaginator() {}
 Repaginator.prototype = {
 	enabled: false,
 	pagecounter: 0,
-	prevPage: '',
 	beforeNum: '',
 	afterNum: '',
 	numStr: '',
@@ -216,7 +220,6 @@ Repaginator.prototype = {
 			win.document.body.setAttribute('antipagination','isOn');
 
 			var iframe = win.document.createElement('iframe');
-			this.iframe = iframe;
 			iframe.style.display = 'none';
 			iframe.setAttribute('src',node.href);
 			let self = this;
@@ -242,31 +245,30 @@ Repaginator.prototype = {
 	},
 
 	// Append all children of source to target
-	AppendChildren: function(source, target) {
+	appendChildren: function(source, target) {
 		for (var child = source.firstChild; child != null; child = child.nextSibling)	{
 			target.appendChild(child.cloneNode(true));
 		}
 	},
 	loadNext: function(element) {
-		if (this.prevIframe) {
-			this.prevIframe.parentNode.removeChild(this.prevIframe);
-		}
-		if (!this.slideshow) {
-			this.prevIframe = this.iframe;
-		}
+		try {
+			let ownerDoc = element.ownerDocument;
+			if (ownerDoc.body.getAttribute('antipagination') != 'isOn')	{
+				throw new Error("Not running");
+			}
 
-		if(element.ownerDocument.body.getAttribute('antipagination') == 'isOn')	{
-			var doc = this.iframe.contentDocument;
+			var doc = element.contentDocument;
 			this.pagecounter++;
+
 			if (this.slideshow) {
-				element.ownerDocument.body.style.display = 'none';
+				ownerDoc.body.style.display = 'none';
 				var cloner = doc.body.cloneNode(true);
-				element.ownerDocument.documentElement.appendChild(cloner);
-				element.ownerDocument.body = cloner;
-				element.ownerDocument.body.setAttribute('antipagination', 'isOn');
+				ownerDoc.documentElement.appendChild(cloner);
+				ownerDoc.body = cloner;
+				ownerDoc.body.setAttribute('antipagination', 'isOn');
 			}
 			else {
-				this.AppendChildren(doc.body, element.ownerDocument.body);
+				this.appendChildren(doc.body, ownerDoc.body);
 			}
 
 			var savedQuery;
@@ -278,7 +280,7 @@ Repaginator.prototype = {
 				this.increment();
 			}
 
-			var xresult = doc.evaluate(
+			let xresult = doc.evaluate(
 				this.query,
 				doc,
 				null,
@@ -286,14 +288,16 @@ Repaginator.prototype = {
 				null
 				);
 
-			var node = this.getLast(xresult);
+			let node = this.getLast(xresult);
+
+			let location = (doc.location || {}).href || null;
 
 			if (this.attemptToIncrement
-				&& (node == null || node.href == doc.location.href)) {
+				&& (!node || node.href == location)) {
 				this.query = savedQuery;
 				this.numberToIncrement = null;
 
-				var xresult = doc.evaluate(
+				xresult = doc.evaluate(
 					this.query,
 					doc,
 					null,
@@ -304,36 +308,41 @@ Repaginator.prototype = {
 			}
 
 			this.attemptToIncrement = false;
-			if(node && (!doc.location || node.href != doc.location.href)) {
-				if (doc.location) {
-					this.prevPage = doc.location.href;
-				}
-				if (this.nolimit == true
-					|| ((this.nolimit == false) && (this.pagecounter < this.pagelimit))
-				) {
-					var niframe = element.ownerDocument.createElement('iframe');
-					this.iframe = niframe;
-					niframe.style.display='none';
-					niframe.setAttribute('src',node.href);
-					let self = this;
-					niframe.addEventListener('load',function() {
-						this.removeEventListener('load', arguments.callee, true);
-						if(self.slideshow) {
-							setTimeout(function() self.loadNext(niframe), self.seconds * 1000);
-						}
-						else {
-							self.loadNext(this);
-						}
-					}, true);
-					element.ownerDocument.body.appendChild(niframe);
+
+			if (!node) {
+				throw new Error("No next node found");
+			}
+			if (location && location == node.href) {
+				throw new Error("Location match (nothing new): " + location + ", " + node.href);
+			}
+
+			if (!this.nolimit && this.pagecounter >= this.pagelimit) {
+				throw new Error("Done");
+			}
+
+			var niframe = ownerDoc.createElement('iframe');
+			niframe.style.display = 'none';
+			niframe.setAttribute('src', node.href);
+
+			let self = this;
+			niframe.addEventListener('load',function() {
+				this.removeEventListener('load', arguments.callee, true);
+				if(self.slideshow) {
+					setTimeout(function() self.loadNext(niframe), self.seconds * 1000);
 				}
 				else {
-					element.ownerDocument.body.setAttribute('antipagination','isOff');
+					self.loadNext(this);
 				}
-			}
-			else {
-				element.ownerDocument.body.setAttribute('antipagination','isOff');
-			}
+			}, true);
+
+			ownerDoc.body.appendChild(niframe);
 		}
+		catch (ex) {
+			ownerDoc.body.setAttribute('antipagination','isOff');
+			reportError(ex);
+		}
+
+		// kill the frame again
+		setTimeout(function() element.parentNode.removeChild(element), 0);
 	}
 };

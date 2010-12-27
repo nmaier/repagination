@@ -54,45 +54,4 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 		</menupopup>
 	</menu>
 </popup>
-<!--window id="main-window">
-<popup id="antipagination_hide">
-	<menu label="Re-Pagination"
-		id="antipagination_menu2">
-		<menupopup id="antipagination_menupopup2" onpopupshowing="event.stopPropagation();">
-			<menuitem id="antipagination_flatten_nolimit2"
-				label="All"
-				oncommand="antipagination.increment();"/>
-			<menu id="antipagination_flat_limit_menu2" label="Limited">
-				<menupopup  onpopupshowing="event.stopPropagation();">
-					<menuitem label="5" oncommand="antipagination.increment(5);"/>
-					<menuitem label="10" oncommand="antipagination.increment(10);"/>
-					<menuitem label="20"  oncommand="antipagination.increment(20);"/>
-					<menuitem label="30" oncommand="antipagination.increment(30);"/>
-					<menuitem label="50" oncommand="antipagination.increment(50);"/>
-					<menuitem label="75" oncommand="antipagination.increment(75);" />
-					<menuitem label="100" oncommand="antipagination.increment(100);"/>
-					<menuitem label="250" oncommand="antipagination.increment(250);"/>
-				</menupopup>
-			</menu>
-				<menu id="antipagination_flat_nolimit_slide2" label="SlideShow">
-				<menupopup  onpopupshowing="event.stopPropagation();">
-					<menuitem label="0" oncommand="antipagination.increment(0,true);"/>
-					<menuitem label="1" oncommand="antipagination.increment(1,true);"/>
-					<menuitem label="2" oncommand="antipagination.increment(2,true);"/>
-					<menuitem label="4" oncommand="antipagination.increment(4,true);"/>
-					<menuitem label="5" oncommand="antipagination.increment(5,true);"/>
-					<menuitem label="8"  oncommand="antipagination.increment(8,true);"/>
-					<menuitem label="10"  oncommand="antipagination.increment(10,true);"/>
-					<menuitem label="16" oncommand="antipagination.increment(16,true);"/>
-					<menuitem label="32" oncommand="antipagination.increment(32,true);"/>
-					<menuitem label="64" oncommand="antipagination.increment(64,true);" />
-				</menupopup>
-			</menu>
-			<menuitem id="antipagination_stop2"
-				label="Stop"
-				oncommand="antipagination.stop();"/>
-		</menupopup>
-	</menu>
-</popup>
-</window-->
 </overlay>

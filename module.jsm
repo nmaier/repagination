@@ -181,6 +181,10 @@ Repaginator.prototype = {
 	enabled: false,
 	pagecounter: 0,
 	prevPage: '',
+	beforeNum: '',
+	afterNum: '',
+	numStr: '',
+	isSelect: true,
 
 	// Get last item in a container
 	getLast: function(container) {
@@ -197,12 +201,15 @@ Repaginator.prototype = {
 
 	blast: function(win) {
 		try	{
-			var xresult = win.document
-					.evaluate(
-						this.query,
-						win.document,null,0,null);
+			var xresult = win.document.evaluate(
+				this.query,
+				win.document,
+				null,
+				0,
+				null
+				);
 			var node = this.getLast(xresult);
-			if(node == null) {
+			if (node == null) {
 				throw new Error("No node");
 			}
 
@@ -210,7 +217,7 @@ Repaginator.prototype = {
 
 			var iframe = win.document.createElement('iframe');
 			this.iframe = iframe;
-			iframe.style.display='none';
+			iframe.style.display = 'none';
 			iframe.setAttribute('src',node.href);
 			let self = this;
 			iframe.addEventListener('load', function(event) {
@@ -226,12 +233,11 @@ Repaginator.prototype = {
 		}
 	},
 
-	beforeNum: '',
-	afterNum: '',
-	numStr: '',
-	isSelect: true,
 	increment: function() {
-		this.query = this.query.replace(new RegExp(this.numberToIncrement, 'g'), Number(this.numberToIncrement) + 1);
+		this.query = this.query.replace(
+			new RegExp(this.numberToIncrement, 'g'),
+			new Number(this.numberToIncrement) + 1
+			);
 		this.numberToIncrement++;
 	},
 
@@ -252,16 +258,15 @@ Repaginator.prototype = {
 		if(element.ownerDocument.body.getAttribute('antipagination') == 'isOn')	{
 			var doc = this.iframe.contentDocument;
 			this.pagecounter++;
-			if(this.slideshow) {
+			if (this.slideshow) {
 				element.ownerDocument.body.style.display = 'none';
 				var cloner = doc.body.cloneNode(true);
 				element.ownerDocument.documentElement.appendChild(cloner);
 				element.ownerDocument.body = cloner;
-				element.ownerDocument.body.setAttribute('antipagination','isOn');
+				element.ownerDocument.body.setAttribute('antipagination', 'isOn');
 			}
 			else {
 				this.AppendChildren(doc.body, element.ownerDocument.body);
-				//element.ownerDocument.body.appendChild(doc.body.cloneNode(true));
 			}
 
 			var savedQuery;
@@ -269,37 +274,42 @@ Repaginator.prototype = {
 				savedQuery = this.query;
 				this.increment();
 			}
-			else if (this.numberToIncrement != null)
+			else if (this.numberToIncrement != null) {
 				this.increment();
+			}
 
-			var xresult = doc
-				.evaluate(this.query,doc,null,0,null);
+			var xresult = doc.evaluate(
+				this.query,
+				doc,
+				null,
+				0,
+				null
+				);
 
 			var node = this.getLast(xresult);
 
-			if (this.attemptToIncrement && (node == null || node.href == doc.location.href)) {
+			if (this.attemptToIncrement
+				&& (node == null || node.href == doc.location.href)) {
 				this.query = savedQuery;
 				this.numberToIncrement = null;
 
-				var xresult = doc
-					.evaluate(this.query,doc,null,0,null);
+				var xresult = doc.evaluate(
+					this.query,
+					doc,
+					null,
+					0,
+					null
+					);
 				node = this.getLast(xresult);
 			}
 
 			this.attemptToIncrement = false;
-
-			if(node != null && (doc.location == null || node.href != doc.location.href)) {
-
-				if(doc.location != null) {
+			if(node && (!doc.location || node.href != doc.location.href)) {
+				if (doc.location) {
 					this.prevPage = doc.location.href;
 				}
-				if(
-					(
-					(this.nolimit == false)
-					&& (this.pagecounter <
-					this.pagelimit)
-					 )
-					|| this.nolimit == true
+				if (this.nolimit == true
+					|| ((this.nolimit == false) && (this.pagecounter < this.pagelimit))
 				) {
 					var niframe = element.ownerDocument.createElement('iframe');
 					this.iframe = niframe;

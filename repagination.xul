@@ -9,41 +9,41 @@
 			removeEventListener('load', arguments.callee, true);
 			let _a = {};
 			Components.utils.import("resource://repagination/module.jsm", _a);
-			window.antipagination = _a.AntiPagination(window);
+			_a.AntiPagination(window);
 		}, true);
 	]]></script>
 	<popup id="contentAreaContextMenu">
 		<menu label="Re-Pagination" insertafter="context-sep-properties" id="antipagination_menu">
 			<menupopup id="antipagination_menupopup" onpopupshowing="event.stopPropagation();">
-				<menuitem id="antipagination_flatten_nolimit" label="All" oncommand="antipagination.blast();"/>
+				<menuitem id="antipagination_flatten_nolimit" label="All" />
 				<menu id="antipagination_flat_limit_menu" label="Limited">
-					<menupopup onpopupshowing="event.stopPropagation();">
-						<menuitem label="5" oncommand="antipagination.blast(5);"/>
-						<menuitem label="10" oncommand="antipagination.blast(10);"/>
-						<menuitem label="15" oncommand="antipagination.blast(15);"/>
-						<menuitem label="20" oncommand="antipagination.blast(20);"/>
-						<menuitem label="25" oncommand="antipagination.blast(25);"/>
-						<menuitem label="30" oncommand="antipagination.blast(30);" />
-						<menuitem label="35" oncommand="antipagination.blast(35);"/>
-						<menuitem label="40" oncommand="antipagination.blast(40);"/>
-						<menuitem label="100" oncommand="antipagination.blast(100);"/>
+					<menupopup>
+						<menuitem label="5" />
+						<menuitem label="10" />
+						<menuitem label="15" />
+						<menuitem label="20" />
+						<menuitem label="25" />
+						<menuitem label="30" />
+						<menuitem label="35" />
+						<menuitem label="40" />
+						<menuitem label="100" />
 					</menupopup>
 				</menu>
-					<menu id="antipagination_flat_nolimit_slide" label="SlideShow">
-					<menupopup onpopupshowing="event.stopPropagation();">
-						<menuitem label="0 sec" oncommand="antipagination.blast(0,true);"/>
-						<menuitem label="1 sec" oncommand="antipagination.blast(1,true);"/>
-						<menuitem label="2 sec" oncommand="antipagination.blast(2,true);"/>
-						<menuitem label="4 sec" oncommand="antipagination.blast(4,true);"/>
-						<menuitem label="5 sec" oncommand="antipagination.blast(5,true);"/>
-						<menuitem label="8 sec" oncommand="antipagination.blast(8,true);"/>
-						<menuitem label="10 sec" oncommand="antipagination.blast(10,true);"/>
-						<menuitem label="16 sec" oncommand="antipagination.blast(16,true);"/>
-						<menuitem label="32 sec" oncommand="antipagination.blast(32,true);"/>
-						<menuitem label="64 sec" oncommand="antipagination.blast(64,true);" />
+				<menu id="antipagination_flat_nolimit_slide" label="SlideShow">
+					<menupopup>
+						<menuitem label="0 sec" value="0" />
+						<menuitem label="1 sec" value="1" />
+						<menuitem label="2 sec" value="2" />
+						<menuitem label="4 sec" value="4" />
+						<menuitem label="5 sec" value="5" />
+						<menuitem label="8 sec" value="8" />
+						<menuitem label="10 sec" value="10" />
+						<menuitem label="16 sec" value="16" />
+						<menuitem label="32 sec" value="32" />
+						<menuitem label="64 sec" value="64" />
 					</menupopup>
 				</menu>
-				<menuitem id="antipagination_stop" label="Stop" oncommand="antipagination.stop();"/>
+				<menuitem id="antipagination_stop" label="Stop" />
 			</menupopup>
 		</menu>
 	</popup>

@@ -50,7 +50,7 @@ function getFirstSnapshot(doc,node,query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
 
-if (!'setTimeout' in this) {
+if (!('setTimeout' in this)) {
 	let Timer = Components.Constructor('@mozilla.org/timer;1', 'nsITimer', 'init');
 	this.setTimeout = function(fun, timeout) new Timer({observe: function() fun()}, timeout, 0);
 }
@@ -176,7 +176,30 @@ function AntiPagination(window) {
 		menu.hidden = true;
 	}, true);
 
-	return antipagination;
+	// All
+	$('antipagination_flatten_nolimit').addEventListener('command', function(event) {
+		antipagination.blast();
+	}, true);
+	// Stop
+	$('antipagination_stop').addEventListener('command', function(event) {
+		antipagination.stop();
+	}, true);
+	// Limit
+	$('antipagination_flat_limit_menu').addEventListener('command', function(event) {
+		let t = event.target;
+		if (t.localName != 'menuitem') {
+			return;
+		}
+		antipagination.blast(parseInt(t.getAttribute('label'), 10));
+	}, true);
+	// Slideshow
+	$('antipagination_flat_nolimit_slide').addEventListener('command', function(event) {
+		let t = event.target;
+		if (t.localName != 'menuitem') {
+			return;
+		}
+		antipagination.blast(parseInt(t.getAttribute('value'), 10), true);
+	}, true);
 }
 
 function Repaginator() {}
@@ -249,8 +272,12 @@ Repaginator.prototype = {
 		}
 	},
 	loadNext: function(element) {
+		let ownerDoc = element.ownerDocument;
+		if (!ownerDoc) {
+			setTimeout(function() element.parentNode.removeChild(element), 0);
+			return;
+		}
 		try {
-			let ownerDoc = element.ownerDocument;
 			if (ownerDoc.body.getAttribute('antipagination') != 'isOn')	{
 				throw new Error("Not running");
 			}
@@ -337,7 +364,7 @@ Repaginator.prototype = {
 		}
 		catch (ex) {
 			ownerDoc.body.setAttribute('antipagination','isOff');
-			reportError(ex);
+			//reportError(ex);
 		}
 
 		// kill the frame again

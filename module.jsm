@@ -135,7 +135,7 @@ function AntiPagination(window) {
 		stop: function() {
 			if(window.gContextMenu == null
 				|| window.gContextMenu.target == null) {
-				var body = window._content.document.getElementsByTagName('body')[0];
+				var body = window.content.document.getElementsByTagName('body')[0];
 				if(body != null) {
 					body.setAttribute('antipagination','isOff');
 				}

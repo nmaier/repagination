@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <overlay id="antipagination"
-xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:html="http://www.w3.org/1999/xhtml"
 >
@@ -15,11 +15,11 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 ]]>
 </script>
  <popup id="contentAreaContextMenu">
-	<menu label="Re-Pagination" insertafter="context-sep-properties" 
+	<menu label="Re-Pagination" insertafter="context-sep-properties"
 		id="antipagination_menu">
 		<menupopup id="antipagination_menupopup" onpopupshowing="event.stopPropagation();">
-			<menuitem id="antipagination_flatten_nolimit"  
-				label="All"  
+			<menuitem id="antipagination_flatten_nolimit"
+				label="All"
 				oncommand="antipagination.blast();"/>
 			<menu id="antipagination_flat_limit_menu" label="Limited">
 				<menupopup  onpopupshowing="event.stopPropagation();">
@@ -49,7 +49,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 				</menupopup>
 			</menu>
 			<menuitem id="antipagination_stop"
-				label="Stop" 
+				label="Stop"
 				oncommand="antipagination.stop();"/>
 		</menupopup>
 	</menu>
@@ -59,8 +59,8 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 	<menu label="Re-Pagination"
 		id="antipagination_menu2">
 		<menupopup id="antipagination_menupopup2" onpopupshowing="event.stopPropagation();">
-			<menuitem id="antipagination_flatten_nolimit2"  
-				label="All"  
+			<menuitem id="antipagination_flatten_nolimit2"
+				label="All"
 				oncommand="antipagination.increment();"/>
 			<menu id="antipagination_flat_limit_menu2" label="Limited">
 				<menupopup  onpopupshowing="event.stopPropagation();">
@@ -89,7 +89,7 @@ xmlns:html="http://www.w3.org/1999/xhtml"
 				</menupopup>
 			</menu>
 			<menuitem id="antipagination_stop2"
-				label="Stop" 
+				label="Stop"
 				oncommand="antipagination.stop();"/>
 		</menupopup>
 	</menu>

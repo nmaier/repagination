@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['AntiPagination'];
+const EXPORTED_SYMBOLS = ['repagination'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -55,7 +55,7 @@ if (!('setTimeout' in this)) {
 	this.setTimeout = function(fun, timeout) new Timer({observe: function() fun()}, timeout, 0);
 }
 
-function AntiPagination(window) {
+function repagination(window) {
 	var document = window.document;
 
 	function $(id) document.getElementById(id);
@@ -134,19 +134,19 @@ function AntiPagination(window) {
 		if (!window.gContextMenu || !window.gContextMenu.target) {
 			var body = window.content.document.getElementsByTagName('body')[0];
 			if (body) {
-				body.setAttribute('antipagination','isOff');
+				body.setAttribute('repagination','isOff');
 			}
 		}
 		else {
 			var doc = window.gContextMenu.target.ownerDocument;
 			var body = doc.getElementsByTagName('body')[0];
 			if (body) {
-				body.setAttribute('antipagination','isOff');
+				body.setAttribute('repagination','isOff');
 			}
 		}
 	}
 
-	let menu = $('antipagination_menu');
+	let menu = $('repagination_menu');
 	let contextMenu = $('contentAreaContextMenu');
 	contextMenu.addEventListener('popupshowing', function() {
 		if (window.gContextMenu.onLink) {
@@ -161,7 +161,7 @@ function AntiPagination(window) {
 			return;
 		}
 
-		var result = body.getAttribute('antipagination');
+		var result = body.getAttribute('repagination');
 		if (!result) {
 			menu.hidden = true;
 			return;
@@ -174,15 +174,15 @@ function AntiPagination(window) {
 	}, true);
 
 	// All
-	$('antipagination_flatten_nolimit').addEventListener('command', function(event) {
+	$('repagination_flatten_nolimit').addEventListener('command', function(event) {
 		blast();
 	}, true);
 	// Stop
-	$('antipagination_stop').addEventListener('command', function(event) {
+	$('repagination_stop').addEventListener('command', function(event) {
 		stop();
 	}, true);
 	// Limit
-	$('antipagination_flat_limit_menu').addEventListener('command', function(event) {
+	$('repagination_flat_limit_menu').addEventListener('command', function(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
@@ -190,7 +190,7 @@ function AntiPagination(window) {
 		blast(parseInt(t.getAttribute('label'), 10));
 	}, true);
 	// Slideshow
-	$('antipagination_flat_nolimit_slide').addEventListener('command', function(event) {
+	$('repagination_flat_nolimit_slide').addEventListener('command', function(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
@@ -235,7 +235,7 @@ Repaginator.prototype = {
 				throw new Error("No node");
 			}
 
-			win.document.body.setAttribute('antipagination','isOn');
+			win.document.body.setAttribute('repagination','isOn');
 
 			var iframe = win.document.createElement('iframe');
 			iframe.style.display = 'none';
@@ -245,11 +245,11 @@ Repaginator.prototype = {
 				this.removeEventListener('load', arguments.callee, true);
 				self.loadNext(this);
 			}, true);
-			win.document.body.setAttribute('antipagination','isOn');
+			win.document.body.setAttribute('repagination','isOn');
 			win.document.body.appendChild(iframe);
 		}
 		catch(ex) {
-			win.document.body.setAttribute('antipagination','isOff');
+			win.document.body.setAttribute('repagination','isOff');
 			reportError(ex);
 		}
 	},
@@ -275,7 +275,7 @@ Repaginator.prototype = {
 			return;
 		}
 		try {
-			if (ownerDoc.body.getAttribute('antipagination') != 'isOn')	{
+			if (ownerDoc.body.getAttribute('repagination') != 'isOn')	{
 				throw new Error("Not running");
 			}
 
@@ -287,7 +287,7 @@ Repaginator.prototype = {
 				var cloner = doc.body.cloneNode(true);
 				ownerDoc.documentElement.appendChild(cloner);
 				ownerDoc.body = cloner;
-				ownerDoc.body.setAttribute('antipagination', 'isOn');
+				ownerDoc.body.setAttribute('repagination', 'isOn');
 			}
 			else {
 				this.appendChildren(doc.body, ownerDoc.body);
@@ -360,7 +360,7 @@ Repaginator.prototype = {
 			ownerDoc.body.appendChild(niframe);
 		}
 		catch (ex) {
-			ownerDoc.body.setAttribute('antipagination','isOff');
+			ownerDoc.body.setAttribute('repagination','isOff');
 			//reportError(ex);
 		}
 

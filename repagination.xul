@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<overlay id="antipagination"
+<overlay id="repagination"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns:html="http://www.w3.org/1999/xhtml"
@@ -7,16 +7,16 @@
 	<script type="application/x-javascript"><![CDATA[
 		addEventListener('load', function() {
 			removeEventListener('load', arguments.callee, true);
-			let _a = {};
-			Components.utils.import("resource://repagination/module.jsm", _a);
-			_a.AntiPagination(window);
+			let _m = {};
+			Components.utils.import("resource://repagination/module.jsm", _m);
+			_m.repagination(window);
 		}, true);
 	]]></script>
 	<popup id="contentAreaContextMenu">
-		<menu label="Re-Pagination" insertafter="context-sep-properties" id="antipagination_menu">
-			<menupopup id="antipagination_menupopup" onpopupshowing="event.stopPropagation();">
-				<menuitem id="antipagination_flatten_nolimit" label="All" />
-				<menu id="antipagination_flat_limit_menu" label="Limited">
+		<menu label="Re-Pagination" insertafter="context-sep-properties" id="repagination_menu">
+			<menupopup>
+				<menuitem id="repagination_flatten_nolimit" label="All" />
+				<menu id="repagination_flat_limit_menu" label="Limited">
 					<menupopup>
 						<menuitem label="5" />
 						<menuitem label="10" />
@@ -29,7 +29,7 @@
 						<menuitem label="100" />
 					</menupopup>
 				</menu>
-				<menu id="antipagination_flat_nolimit_slide" label="SlideShow">
+				<menu id="repagination_flat_nolimit_slide" label="SlideShow">
 					<menupopup>
 						<menuitem label="0 sec" value="0" />
 						<menuitem label="1 sec" value="1" />
@@ -43,7 +43,7 @@
 						<menuitem label="64 sec" value="64" />
 					</menupopup>
 				</menu>
-				<menuitem id="antipagination_stop" label="Stop" />
+				<menuitem id="repagination_stop" label="Stop" />
 			</menupopup>
 		</menu>
 	</popup>

@@ -4,11 +4,14 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 xmlns:html="http://www.w3.org/1999/xhtml"
 >
-
-<script type="application/x-javascript" src="javascript.js"/>
-
 <script type="application/x-javascript">
 <![CDATA[
+	addEventListener('load', function() {
+		removeEventListener('load', arguments.callee, true);
+		let _a = {};
+		Components.utils.import("resource://repagination/module.jsm", _a);
+		window.antipagination = _a.AntiPagination(window);
+	}, true);
 ]]>
 </script>
  <popup id="contentAreaContextMenu">

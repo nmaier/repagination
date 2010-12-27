@@ -1,2 +1,3 @@
 overlay	chrome://browser/content/browser.xul	chrome://repagination/content/
 content	repagination	./
+resource repagination ./

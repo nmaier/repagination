@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+	<Description about="urn:mozilla:install-manifest">
+		<em:id>repagination@tn123.org</em:id>
+		<em:name>Re-Pagination</em:name>
+		<em:version>2010.12.27</em:version>
+		<em:description>Right click &quot;next&quot; or &quot;previous&quot; or &quot;2&quot; link and flatten all results to one page. Ex. Search Results Page. There is also a slide show option.</em:description>
+		<em:creator>Lev, Omar</em:creator>
+
+		<em:targetApplication>
+			<Description>
+				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+				<em:minVersion>3.6</em:minVersion>
+				<em:maxVersion>4.0.*</em:maxVersion>
+			</Description>
+		</em:targetApplication>
+	</Description>
+</RDF>

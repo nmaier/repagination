@@ -46,8 +46,14 @@ const reportError = Cu.reportError;
 const regxNumber = /[0-9]+/;
 const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
 
+function getFirstSnapshot(doc,node,query) doc
+	.evaluate(query, node, null, 7, null)
+	.snapshotItem(0);
+
 function AntiPagination(window) {
 	var document = window.document;
+
+	function $(id) document.getElementById(id);
 
 	var antipagination = {
 		blast: function(num,isslide) {
@@ -78,28 +84,26 @@ function AntiPagination(window) {
 			searchpathtext = range.toString();
 
 			repaginator.query = '//body';
-			if (!searchpathtext) {
+			if (searchpathtext) {
 				repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
 			}
 			else {
-				if (focusElement.getAttribute('value') != ''
-					&& focusElement.getAttribute('value') != null)	{
+				if (focusElement.getAttribute('value'))	{
 					var input_value = focusElement.getAttribute('value');
 
 					if (input_value) {
 						repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
 					}
 				}
-				else if (focusElement.getAttribute('src') != ''
-					&& focusElement.getAttribute('src') != null) {
+				else if (focusElement.getAttribute('src')) {
 					var img_src = focusElement.getAttribute('src');
 
 					if (img_src)	{
 						repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
 					}
 				}
-				else if (focusElement instanceof HTMLAnchorElement) {
-					var srcObj = this.returnFirstSnapshot(doc, focusElement, 'child::*[@src]');
+				else if (focusElement instanceof window.HTMLAnchorElement) {
+					var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
 					if (srcObj) {
 						var img_src = srcObj.getAttribute('src');
 						if (img_src) {
@@ -112,8 +116,8 @@ function AntiPagination(window) {
 			repaginator.numberToIncrement = null;
 			repaginator.attemptToIncrement = false;
 
-			if (!regx2Numbers.test(query))	{
-				var test = regxNumber.exec(query);
+			if (!regx2Numbers.test(repaginator.query))	{
+				var test = regxNumber.exec(repaginator.query);
 				if (test)	{
 					repaginator.attemptToIncrement = true;
 					repaginator.numberToIncrement = test[0];
@@ -123,11 +127,6 @@ function AntiPagination(window) {
 			repaginator.blast(doc.defaultView);
 		},
 
-		returnFirstSnapshot: function (doc,node,query) {
-			return doc
-				.evaluate(query,node,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null)
-				.snapshotItem(0);
-		},
 		stop: function() {
 			if(window.gContextMenu == null
 				|| window.gContextMenu.target == null) {
@@ -144,42 +143,36 @@ function AntiPagination(window) {
 					body.setAttribute('antipagination','isOff');
 				}
 			}
-		},
-		onload: function() {
-			antipagination.menu = document
-				.getElementById('antipagination_menu');
-			var contextMenu = document
-				.getElementById('contentAreaContextMenu');
-			contextMenu.addEventListener('popupshowing',
-				antipagination.popupshowing, true);
-		},
-		popupshowing: function()	{
-			if(window.gContextMenu.onLink) {
-				antipagination.menu.hidden = false;
-				return;
-			}
-
-			var doc = window.gContextMenu.target.ownerDocument;
-			var body = doc.getElementsByTagName('body')[0];
-
-			if(body == null) {
-				antipagination.menu.hidden = true;
-				return;
-			}
-
-			var result = body.getAttribute('antipagination');
-			if(result == '') {
-				antipagination.menu.hidden = true;
-				return;
-			}
-			if(result == 'isOn') {
-				antipagination.menu.hidden = false;
-				return;
-			}
-			antipagination.menu.hidden = true;
 		}
 	};
-	antipagination.onload();
+
+	let menu = $('antipagination_menu');
+	let contextMenu = $('contentAreaContextMenu');
+	contextMenu.addEventListener('popupshowing', function() {
+		if (window.gContextMenu.onLink) {
+			menu.hidden = false;
+			return;
+		}
+
+		var doc = window.gContextMenu.target.ownerDocument;
+		var body = doc.getElementsByTagName('body')[0];
+		if (!body) {
+			menu.hidden = true;
+			return;
+		}
+
+		var result = body.getAttribute('antipagination');
+		if (!result) {
+			menu.hidden = true;
+			return;
+		}
+		if(result == 'isOn') {
+			menu.hidden = false;
+			return;
+		}
+		menu.hidden = true;
+	}, true);
+
 	return antipagination;
 }
 

@@ -61,20 +61,20 @@ function AntiPagination(window) {
 	function $(id) document.getElementById(id);
 
 	var antipagination = {
-		blast: function(num,isslide) {
+		blast: function(num, isslide) {
 			var focusElement = document.commandDispatcher.focusedElement;
-			if (focusElement == null) {
+			if (!focusElement) {
 				throw new Error("No focus element");
 			}
 			var doc = focusElement.ownerDocument;
 			var repaginator = new Repaginator();
 
-			if(isslide != null && num != null) {
+			if (isslide && num) {
 				repaginator.seconds = num;
 				repaginator.slideshow = true;
 				repaginator.nolimit = true;
 			}
-			else if(num != null) {
+			else if (num) {
 				repaginator.slideshow = false;
 				repaginator.pagelimit = num;
 				repaginator.nolimit = false;
@@ -133,18 +133,16 @@ function AntiPagination(window) {
 		},
 
 		stop: function() {
-			if(window.gContextMenu == null
-				|| window.gContextMenu.target == null) {
+			if (!window.gContextMenu || !window.gContextMenu.target) {
 				var body = window.content.document.getElementsByTagName('body')[0];
-				if(body != null) {
+				if (body) {
 					body.setAttribute('antipagination','isOff');
 				}
 			}
 			else {
 				var doc = window.gContextMenu.target.ownerDocument;
 				var body = doc.getElementsByTagName('body')[0];
-
-				if(body != null) {
+				if (body) {
 					body.setAttribute('antipagination','isOff');
 				}
 			}
@@ -194,9 +192,9 @@ Repaginator.prototype = {
 	getLast: function(container) {
 		var item =  container.iterateNext();
 		var temp = item;
-		while(temp != null) {
+		while (temp) {
 			temp = container.iterateNext();
-			if(temp != null) {
+			if (temp) {
 				item = temp;
 			}
 		}
@@ -213,7 +211,7 @@ Repaginator.prototype = {
 				null
 				);
 			var node = this.getLast(xresult);
-			if (node == null) {
+			if (!node) {
 				throw new Error("No node");
 			}
 
@@ -246,7 +244,7 @@ Repaginator.prototype = {
 
 	// Append all children of source to target
 	appendChildren: function(source, target) {
-		for (var child = source.firstChild; child != null; child = child.nextSibling)	{
+		for (var child = source.firstChild; child; child = child.nextSibling)	{
 			target.appendChild(child.cloneNode(true));
 		}
 	},
@@ -276,7 +274,7 @@ Repaginator.prototype = {
 				savedQuery = this.query;
 				this.increment();
 			}
-			else if (this.numberToIncrement != null) {
+			else if (this.numberToIncrement) {
 				this.increment();
 			}
 

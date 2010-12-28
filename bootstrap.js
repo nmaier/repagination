@@ -307,7 +307,7 @@ Repaginator.prototype = {
 				ownerDoc.body.setAttribute('repagination', 'isOn');
 			}
 			else {
-				ownerDoc.body.innerHTML += doc.body.innerHTML;
+				Array.forEach(doc.body.children, function(c) ownerDoc.body.appendChild(ownerDoc.importNode(c, true)));
 			}
 
 			var savedQuery;
@@ -462,7 +462,7 @@ const {install: install, uninstall: uninstall, startup: startup, shutdown: shutd
 				// loadOverlay for the poor
 				function addNode(target, node) {
 					// bring the node to be inserted into the document
-					let nn = document.adoptNode(node.cloneNode(true));
+					let nn = document.importNode(node, true);
 
 					// helper: insert according to position
 					function insertX(attr, callback) {

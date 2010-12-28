@@ -96,38 +96,37 @@ function repagination(window) {
 		if (searchpathtext) {
 			repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
 		}
-		else {
-			if (focusElement.getAttribute('value'))	{
-				var input_value = focusElement.getAttribute('value');
+		else if (focusElement.getAttribute('value'))	{
+			var input_value = focusElement.getAttribute('value');
 
-				if (input_value) {
-					repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
-				}
+			if (input_value) {
+				repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
 			}
-			else if (focusElement.getAttribute('src')) {
-				var img_src = focusElement.getAttribute('src');
+		}
+		else if (focusElement.getAttribute('src')) {
+			var img_src = focusElement.getAttribute('src');
 
-				if (img_src)	{
+			if (img_src)	{
+				repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+			}
+		}
+		else if (focusElement instanceof window.HTMLAnchorElement) {
+			var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
+			if (srcObj) {
+				var img_src = srcObj.getAttribute('src');
+				if (img_src) {
 					repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
 				}
 			}
-			else if (focusElement instanceof window.HTMLAnchorElement) {
-				var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
-				if (srcObj) {
-					var img_src = srcObj.getAttribute('src');
-					if (img_src) {
-						repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
-					}
-				}
-			}
 		}
+		repaginator.query += "[last()]";
 
 		repaginator.numberToIncrement = null;
 		repaginator.attemptToIncrement = false;
 
-		if (!regx2Numbers.test(repaginator.query))	{
+		if (!regx2Numbers.test(repaginator.query)) {
 			var test = regxNumber.exec(repaginator.query);
-			if (test)	{
+			if (test) {
 				repaginator.attemptToIncrement = true;
 				repaginator.numberToIncrement = test[0];
 			}
@@ -137,17 +136,15 @@ function repagination(window) {
 	}
 	function stop() {
 		if (!window.gContextMenu || !window.gContextMenu.target) {
-			var body = window.content.document.getElementsByTagName('body')[0];
+			let body = window.content.document.getElementsByTagName('body')[0];
 			if (body) {
 				body.setAttribute('repagination','isOff');
 			}
+			return;
 		}
-		else {
-			var doc = window.gContextMenu.target.ownerDocument;
-			var body = doc.getElementsByTagName('body')[0];
-			if (body) {
-				body.setAttribute('repagination','isOff');
-			}
+		let body = window.gContextMenu.target.ownerDocument.getElementsByTagName('body')[0];
+		if (body) {
+			body.setAttribute('repagination','isOff');
 		}
 	}
 	let menu = $('repagination_menu');
@@ -215,19 +212,6 @@ Repaginator.prototype = {
 	numStr: '',
 	isSelect: true,
 
-	// Get last item in a container
-	getLast: function(container) {
-		var item =  container.iterateNext();
-		var temp = item;
-		while (temp) {
-			temp = container.iterateNext();
-			if (temp) {
-				item = temp;
-			}
-		}
-		return item;
-	},
-
 	setTitle: function() {
 		this._title = this._window.document.title;
 		this._window.document.title = "Re-Pagination running...";
@@ -243,31 +227,32 @@ Repaginator.prototype = {
 		this._window = win;
 		this.setTitle();
 
-		try	{
-			var xresult = win.document.evaluate(
+		try {
+			let node = win.document.evaluate(
 				this.query,
 				win.document,
 				null,
-				0,
+				9,
 				null
-				);
-			var node = this.getLast(xresult);
+				).singleNodeValue;
+
 			if (!node) {
 				throw new Error("No node");
 			}
 
 			win.document.body.setAttribute('repagination','isOn');
 
-			var iframe = win.document.createElement('iframe');
-			iframe.style.display = 'none';
-			iframe.setAttribute('src',node.href);
+			let frame = win.document.createElement('iframe');
+			frame.style.display = 'none';
+			frame.setAttribute('src',node.href);
+
 			let self = this;
-			iframe.addEventListener('load', function(event) {
+			frame.addEventListener('load', function(event) {
 				this.removeEventListener('load', arguments.callee, true);
 				self.loadNext(this);
 			}, true);
 			win.document.body.setAttribute('repagination','isOn');
-			win.document.body.appendChild(iframe);
+			win.document.body.appendChild(frame);
 		}
 		catch (ex) {
 			this.restoreTitle();
@@ -284,12 +269,6 @@ Repaginator.prototype = {
 		this.numberToIncrement++;
 	},
 
-	// Append all children of source to target
-	appendChildren: function(source, target) {
-		for (var child = source.firstChild; child; child = child.nextSibling)	{
-			target.appendChild(child.cloneNode(true));
-		}
-	},
 	loadNext: function(element) {
 		let ownerDoc = element.ownerDocument;
 		if (!ownerDoc) {
@@ -306,14 +285,11 @@ Repaginator.prototype = {
 			this.pagecounter++;
 
 			if (this.slideshow) {
-				ownerDoc.body.style.display = 'none';
-				var cloner = doc.body.cloneNode(true);
-				ownerDoc.documentElement.appendChild(cloner);
-				ownerDoc.body = cloner;
+				ownerDoc.body.innerHTML = doc.body.innerHTML;
 				ownerDoc.body.setAttribute('repagination', 'isOn');
 			}
 			else {
-				this.appendChildren(doc.body, ownerDoc.body);
+				ownerDoc.body.innerHTML += doc.body.innerHTML;
 			}
 
 			var savedQuery;
@@ -325,15 +301,13 @@ Repaginator.prototype = {
 				this.increment();
 			}
 
-			let xresult = doc.evaluate(
+			node = doc.evaluate(
 				this.query,
 				doc,
 				null,
-				0,
+				9,
 				null
-				);
-
-			let node = this.getLast(xresult);
+				).singleNodeValue;
 
 			let location = (doc.location || {}).href || null;
 
@@ -342,14 +316,13 @@ Repaginator.prototype = {
 				this.query = savedQuery;
 				this.numberToIncrement = null;
 
-				xresult = doc.evaluate(
+				node = doc.evaluate(
 					this.query,
 					doc,
 					null,
-					0,
+					9,
 					null
-					);
-				node = this.getLast(xresult);
+					).singleNodeValue;
 			}
 
 			this.attemptToIncrement = false;
@@ -365,14 +338,14 @@ Repaginator.prototype = {
 				throw new Error("Done");
 			}
 
-			var niframe = ownerDoc.createElement('iframe');
-			niframe.style.display = 'none';
-			niframe.setAttribute('src', node.href);
+			let frame = ownerDoc.createElement('iframe');
+			frame.style.display = 'none';
+			frame.setAttribute('src', node.href);
 
 			let self = this;
-			niframe.addEventListener('load',function() {
+			frame.addEventListener('load',function() {
 				this.removeEventListener('load', arguments.callee, true);
-				if(self.slideshow) {
+				if (self.slideshow) {
 					setTimeout(function() self.loadNext(niframe), self.seconds * 1000);
 				}
 				else {
@@ -380,7 +353,7 @@ Repaginator.prototype = {
 				}
 			}, true);
 
-			ownerDoc.body.appendChild(niframe);
+			ownerDoc.body.appendChild(frame);
 		}
 		catch (ex) {
 			this.restoreTitle();

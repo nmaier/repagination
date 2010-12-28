@@ -18,9 +18,11 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Jens Bannmann <jens.b@web.de>
- *  Oliver Aeberhard <aeberhard@gmx.ch>
- *  Nils Maier <maierman@web.de>
+ *   Jens Bannmann <jens.b@web.de>
+ *   Oliver Aeberhard <aeberhard@gmx.ch>
+ *   Nils Maier <maierman@web.de>
+ *   Edward Lee <edilee@mozilla.com>
+ *   Erik Vold <erikvvold@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +57,9 @@ if (!('setTimeout' in this)) {
 	this.setTimeout = function(fun, timeout) new Timer({observe: function() fun()}, timeout, 0);
 }
 
+/**
+ * Setup repagination for a window
+ */
 function repagination(window) {
 	var document = window.document;
 
@@ -145,7 +150,6 @@ function repagination(window) {
 			}
 		}
 	}
-
 	let menu = $('repagination_menu');
 	let contextMenu = $('contentAreaContextMenu');
 	contextMenu.addEventListener('popupshowing', function() {
@@ -199,6 +203,9 @@ function repagination(window) {
 	}, true);
 }
 
+/**
+ * Repaginator implementation
+ */
 function Repaginator() {}
 Repaginator.prototype = {
 	enabled: false,
@@ -221,7 +228,21 @@ Repaginator.prototype = {
 		return item;
 	},
 
+	setTitle: function() {
+		this._title = this._window.document.title;
+		this._window.document.title = "Re-Pagination running...";
+	},
+	restoreTitle: function() {
+		if (this._title) {
+			this._window.document.title = this._title;
+			delete this._title;
+		}
+	},
+
 	blast: function(win) {
+		this._window = win;
+		this.setTitle();
+
 		try	{
 			var xresult = win.document.evaluate(
 				this.query,
@@ -248,7 +269,8 @@ Repaginator.prototype = {
 			win.document.body.setAttribute('repagination','isOn');
 			win.document.body.appendChild(iframe);
 		}
-		catch(ex) {
+		catch (ex) {
+			this.restoreTitle();
 			win.document.body.setAttribute('repagination','isOff');
 			reportError(ex);
 		}
@@ -272,6 +294,7 @@ Repaginator.prototype = {
 		let ownerDoc = element.ownerDocument;
 		if (!ownerDoc) {
 			setTimeout(function() element.parentNode.removeChild(element), 0);
+			this.restoreTitle();
 			return;
 		}
 		try {
@@ -360,11 +383,268 @@ Repaginator.prototype = {
 			ownerDoc.body.appendChild(niframe);
 		}
 		catch (ex) {
+			this.restoreTitle();
 			ownerDoc.body.setAttribute('repagination','isOff');
-			//reportError(ex);
 		}
 
 		// kill the frame again
 		setTimeout(function() element.parentNode.removeChild(element), 0);
 	}
 };
+
+/* ***
+ bootstrap specific
+ * ***/
+const {install: install, uninstall: uninstall, startup: startup, shutdown: shutdown} = (function() {
+	try {
+		Cu.import("resource://gre/modules/AddonManager.jsm");
+		Cu.import("resource://gre/modules/Services.jsm");
+
+		if (!('XMLHttpRequest' in this)) {
+			this.XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+		}
+
+		/**
+		 * Apply a callback to each open and new browser windows.
+		 *
+		 * @usage watchWindows(callback): Apply a callback to each browser window.
+		 * @param [function] callback: 1-parameter function that gets a browser window.
+		 */
+		function watchWindows(callback) {
+			// Wrap the callback in a function that ignores failures
+			function watcher(window) {
+				try {
+					callback(window);
+				}
+				catch(ex) {}
+			}
+
+			// Wait for the window to finish loading before running the callback
+			function runOnLoad(window) {
+				// Listen for one load event before checking the window type
+				window.addEventListener("load", function() {
+					window.removeEventListener("load", arguments.callee, false);
+
+					// Now that the window has loaded, only handle browser windows
+					let doc = window.document.documentElement;
+					if (doc.getAttribute("windowtype") == "navigator:browser")
+						watcher(window);
+				}, false);
+			}
+
+			// Add functionality to existing windows
+			let browserWindows = Services.wm.getEnumerator("navigator:browser");
+			while (browserWindows.hasMoreElements()) {
+				// Only run the watcher immediately if the browser is completely loaded
+				let browserWindow = browserWindows.getNext();
+				if (browserWindow.document.readyState == "complete")
+					watcher(browserWindow);
+				// Wait for the window to load before continuing
+				else
+					runOnLoad(browserWindow);
+			}
+
+			// Watch for new browser windows opening then wait for it to load
+			function windowWatcher(subject, topic) {
+				if (topic == "domwindowopened")
+					runOnLoad(subject);
+			}
+			Services.ww.registerNotification(windowWatcher);
+
+			// Make sure to stop watching for windows if we're unloading
+			addUnloader(function() Services.ww.unregisterNotification(windowWatcher));
+		}
+
+		/**
+		 * Setup a window according to some XUL and call the next in chain.
+		 * Aka. poor man's loadOverlay
+		 *
+		 * @author Nils Maier
+		 * @param [object] xul: object-dict containing the target-id/Element
+		 */
+		function setupWindow(xul, next, window) {
+			try {
+				if (!xul) {
+					reportError("No XUL for some reason");
+					return;
+				}
+				// shortcut
+				let document = window.document;
+
+				// Santa's little helpers
+				function $(id) document.getElementById(id);
+				function $$(q) document.querySelector(q);
+
+				// loadOverlay for the poor
+				function addNode(target, node) {
+					// bring the node to be inserted into the document
+					let nn = document.adoptNode(node.cloneNode(true));
+
+					// helper: insert according to position
+					function insertX(attr, callback) {
+						if (!nn.hasAttribute(attr)) {
+							return false;
+						}
+						let places = nn.getAttribute(attr)
+							.split(',')
+							.map(function(p) p.trim())
+							.filter(function(p) !!p);
+						for each (let p in places) {
+							let pn = $$('#' + target.id + ' > #' + p);
+							if (!pn) {
+								continue;
+							}
+							callback(pn);
+							return true;
+						}
+						return false;
+					}
+
+					// try to insert according to insertafter/before
+					if (insertX('insertafter', function(pn) pn.parentNode.insertBefore(nn, pn.nextSibling))
+						|| insertX('insertbefore', function(pn) pn.parentNode.insertBefore(nn, pn))) {
+						return nn;
+					}
+					// just append
+					target.appendChild(nn);
+					return nn;
+				}
+
+				// store unloaders for all elements inserted
+				let unloaders = [];
+
+				// Add all overlays
+				for (let id in xul) {
+					let target = $(id);
+					if (!target) {
+						reportError("no target for " + id + ", not inserting");
+						continue;
+					}
+
+					// insert all children
+					for (let n = xul[id].firstChild; n; n = n.nextSibling) {
+						if (n.nodeType != n.ELEMENT_NODE) {
+							continue;
+						}
+						let nn = addNode(target, n);
+						unloaders.push(function() nn.parentNode.removeChild(nn));
+					}
+				}
+
+				// install per-window unloader
+				if (unloaders.length) {
+					let handler = addUnloader(function() {
+						window.removeEventListener('unload', handler, false);
+						unloaders.forEach(function(u) u());
+					});
+					window.addEventListener('unload', handler, false);
+				}
+
+				// run next
+				next(window);
+			}
+			catch (ex) {
+				reportError(ex);
+			}
+		}
+
+		/**
+		 * Loads some XUL and pushes it to watchWindows(setupWindow(next))
+		 *
+		 * @author Nils Maier
+		 * @param [string] file: XUL file to load
+		 * @param [function] next: function to call from watchWindows
+		 * @param [Addon] addon: AddonManger info about the addon to load the XUL from
+		 */
+		function loadXUL(file, next, addon) {
+			try {
+				let xulUrl = addon.getResourceURI(file).spec;
+				let xulReq = new XMLHttpRequest();
+				xulReq.onload = function() {
+					let document = xulReq.responseXML;
+					let root = document.documentElement;
+
+					function xpath() {
+						let rv = [];
+						for (let i = 0; i < arguments.length; ++i) {
+							let nodeSet = document.evaluate(arguments[i], document, null, 7, null);
+							for (let j = 0; j < nodeSet.snapshotLength; ++j) {
+								rv.push(nodeSet.snapshotItem(j));
+							}
+						}
+						return rv;
+					}
+					// clean empty textnodes
+					xpath("//text()[normalize-space(.) = '']")
+						.forEach(function(n) n.parentNode.removeChild(n));
+
+					let xul = {};
+					for (let i = root.firstChild; i; i = i.nextSibling) {
+						if (i.nodeType != i.ELEMENT_NODE || !i.hasAttribute('id')) {
+							continue;
+						}
+						let id = i.getAttribute('id');
+						xul[id] = i;
+					}
+					watchWindows(setupWindow.bind(null, xul, next));
+				};
+				xulReq.overrideMimeType('application/xml');
+				xulReq.open('GET', xulUrl);
+				xulReq.send();
+			}
+			catch (ex) {
+				reportError(ex);
+			}
+		}
+
+		/**
+		 * Add an unloader
+		 *
+		 * @author Nils Maier
+		 * @param [function] callback: unload function to be called
+		 * @return [function] unloader: Can be called at any time to run and remove the unloader
+		 */
+		function addUnloader(callback) {
+			shutdown.unloaders.push(callback);
+			return function() {
+				try {
+					callback();
+				}
+				catch (ex) {}
+				shutdown.unloaders = shutdown.unloaders.filter(function(c) c != callback);
+			};
+		}
+
+		// Addon manager post-install entry
+		function install(){}
+
+		// Addon manager pre-uninstall entry
+		function uninstall(){}
+
+		// Addon manager shutdown entry
+		function shutdown(data, reason) {
+			if (reason === APP_SHUTDOWN) {
+				// No need to cleanup; stuff will vanish anyway
+				return;
+			}
+			for (let u = shutdown.unloaders.pop(); u; u = shutdown.unloaders.pop()) {
+				try {
+					u();
+				}
+				catch (ex) {
+					reportError("Unloader threw" + u.toSource());
+				}
+			}
+		}
+		shutdown.unloaders = [];
+
+		// Addon manager startup entry
+		function startup(data) AddonManager.getAddonByID(data.id, loadXUL.bind(null, "repagination.xul", repagination));
+
+		return {install: install, uninstall: uninstall, startup: startup, shutdown: shutdown};
+	}
+	catch (ex) {
+		// pre-moz2
+		return {install: null, uninstall: null, startup: null, shutdown: null};
+	}
+})();

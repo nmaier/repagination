@@ -9,7 +9,7 @@
 		}, true);
 	]]></script>
 	<popup id="contentAreaContextMenu">
-		<menu label="Re-Pagination" insertafter="context-sep-properties" id="repagination_menu">
+		<menu label="Re-Pagination" insertbefore="context-sep-open" id="repagination_menu">
 			<menupopup>
 				<menuitem id="repagination_flatten_nolimit" label="All" />
 				<menu id="repagination_flat_limit_menu" label="Limited">

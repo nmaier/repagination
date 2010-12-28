@@ -14,6 +14,7 @@
 				<menuitem id="repagination_flatten_nolimit" label="All" />
 				<menu id="repagination_flat_limit_menu" label="Limited">
 					<menupopup>
+						<menuitem label="2" />
 						<menuitem label="5" />
 						<menuitem label="10" />
 						<menuitem label="15" />

@@ -48,9 +48,30 @@ const reportError = Cu.reportError;
 const regxNumber = /[0-9]+/;
 const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
 
-function getFirstSnapshot(doc,node,query) doc
+function getFirstSnapshot(doc, node, query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
+
+function createFrame(window, src, loadFun) {
+	let frame = window.document.createElement('iframe');
+	frame.style.display = 'none';
+	window.document.body.appendChild(frame);
+
+	let docShell = frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+		.getInterface(Ci.nsIWebNavigation)
+		.QueryInterface(Ci.nsIDocShell);
+	docShell.allowImages = false;
+	docShell.allowPlugins = false;
+	docShell.allowDNSPrefetch = false;
+
+	frame.src = src;
+	frame.addEventListener('load', function() {
+		frame.removeEventListener('load', arguments.callee, false);
+		loadFun.call(frame);
+	}, false);
+
+	return frame;
+}
 
 if (!('setTimeout' in this)) {
 	let Timer = Components.Constructor('@mozilla.org/timer;1', 'nsITimer', 'init');
@@ -94,20 +115,20 @@ function repagination(window) {
 
 		repaginator.query = '//body';
 		if (searchpathtext) {
-			repaginator.query = '//a[.=\''+searchpathtext+'\'][position()=last()]';
+			repaginator.query = "//a[.='" + searchpathtext + "']";
 		}
 		else if (focusElement.getAttribute('value'))	{
 			var input_value = focusElement.getAttribute('value');
 
 			if (input_value) {
-				repaginator.query = '//input[@value=\''+input_value+'\'][position()=last()]/ancestor::a';
+				repaginator.query = "//input[@value='" + input_value + "'][last()]/ancestor::a";
 			}
 		}
 		else if (focusElement.getAttribute('src')) {
 			var img_src = focusElement.getAttribute('src');
 
 			if (img_src)	{
-				repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+				repaginator.query = "//img[@src='" + img_src + "'][last()]/ancestor::a";
 			}
 		}
 		else if (focusElement instanceof window.HTMLAnchorElement) {
@@ -115,7 +136,7 @@ function repagination(window) {
 			if (srcObj) {
 				var img_src = srcObj.getAttribute('src');
 				if (img_src) {
-					repaginator.query = '//img[@src=\''+img_src+'\'][position()=last()]/ancestor::a';
+					repaginator.query = "//img[@src='" + img_src + "'][last()]/ancestor::a";
 				}
 			}
 		}
@@ -242,17 +263,11 @@ Repaginator.prototype = {
 
 			win.document.body.setAttribute('repagination','isOn');
 
-			let frame = win.document.createElement('iframe');
-			frame.style.display = 'none';
-			frame.setAttribute('src',node.href);
-
 			let self = this;
-			frame.addEventListener('load', function(event) {
-				this.removeEventListener('load', arguments.callee, true);
+			let frame = createFrame(win, node.href, function(event) {
 				self.loadNext(this);
-			}, true);
-			win.document.body.setAttribute('repagination','isOn');
-			win.document.body.appendChild(frame);
+			});
+			win.document.body.setAttribute('repagination', 'isOn');
 		}
 		catch (ex) {
 			this.restoreTitle();
@@ -283,6 +298,9 @@ Repaginator.prototype = {
 
 			var doc = element.contentDocument;
 			this.pagecounter++;
+
+			// remove futher scripts
+			Array.forEach(doc.querySelectorAll('script'), function(s) s.parentNode.removeChild(s));
 
 			if (this.slideshow) {
 				ownerDoc.body.innerHTML = doc.body.innerHTML;
@@ -338,22 +356,15 @@ Repaginator.prototype = {
 				throw new Error("Done");
 			}
 
-			let frame = ownerDoc.createElement('iframe');
-			frame.style.display = 'none';
-			frame.setAttribute('src', node.href);
-
 			let self = this;
-			frame.addEventListener('load',function() {
-				this.removeEventListener('load', arguments.callee, true);
+			let frame = createFrame(this._window, node.href, function() {
 				if (self.slideshow) {
-					setTimeout(function() self.loadNext(niframe), self.seconds * 1000);
+					setTimeout(function() self.loadNext(frame), self.seconds * 1000);
 				}
 				else {
 					self.loadNext(this);
 				}
-			}, true);
-
-			ownerDoc.body.appendChild(frame);
+			});
 		}
 		catch (ex) {
 			this.restoreTitle();

@@ -245,8 +245,17 @@ Repaginator.prototype = {
 	isSelect: true,
 
 	setTitle: function() {
-		this._title = this._window.document.title;
-		this._window.document.title = "Re-Pagination running...";
+		if(!this._title) {
+			this._title = this._window.document.title;
+		}
+		if (!this.noLimit) {
+			this._window.document.title = "Re-Pagination ("
+				+ this.pagecounter + " of " + this.pagelimit
+				+ ") running ...";
+		}
+		else {
+			this._window.document.title = "Re-Pagination running...";
+		}
 	},
 	restoreTitle: function() {
 		if (this._title) {
@@ -374,6 +383,8 @@ Repaginator.prototype = {
 			if (!this.nolimit && this.pagecounter >= this.pagelimit) {
 				throw new Error("Done");
 			}
+
+			this.setTitle();
 
 			let self = this;
 			let frame = createFrame(this._window, node.href, function() {

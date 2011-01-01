@@ -169,23 +169,41 @@ function repagination(window) {
 		}
 	}
 	let menu = $('repagination_menu');
+	let menu_stop = $('repagination_stop');
 	let contextMenu = $('contentAreaContextMenu');
 	contextMenu.addEventListener('popupshowing', function() {
+		function setMenuHidden(hidden) {
+			Array.forEach(
+				menu.menupopup.childNodes,
+				function(e) e.hidden = hidden
+			);
+			menu.hidden = hidden;
+		}
 		if (window.gContextMenu.onLink) {
-			menu.hidden = false;
+			setMenuHidden(false);
+			try {
+				if (!window.gContextMenu.target.ownerDocument.body
+					.hasAttribute('repagination')) {
+					// Not running, don't show stop
+					menu_stop.hidden = true;
+				}
+			}
+			catch (ex) {
+				// no op
+			}
 			return;
 		}
+		setMenuHidden(true);
 		try {
 			if (window.gContextMenu.target.ownerDocument.body
 				.hasAttribute('repagination')) {
 				// show the menu so the user may abort
-				menu.hidden = false;
+				menu.hidden = menu_stop.hidden = false;
 			}
 		}
 		catch (ex) {
 			// no op
 		}
-		menu.hidden = true;
 	}, true);
 
 	// All

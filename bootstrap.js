@@ -310,6 +310,9 @@ Repaginator.prototype = {
 			this.pagecounter++;
 
 			// remove futher scripts
+			// Note: this is not a security mechanism, but a performance
+			// optimization, as the scripts will likely not execute properly
+			// anyway and may even introduce new errors to the page
 			Array.forEach(
 				doc.querySelectorAll('script'),
 				function(s) s.parentNode.removeChild(s)

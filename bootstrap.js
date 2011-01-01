@@ -159,13 +159,13 @@ function repagination(window) {
 		if (!window.gContextMenu || !window.gContextMenu.target) {
 			let body = window.content.document.getElementsByTagName('body')[0];
 			if (body) {
-				body.setAttribute('repagination','isOff');
+				body.removeAttribute('repagination');
 			}
 			return;
 		}
 		let body = window.gContextMenu.target.ownerDocument.getElementsByTagName('body')[0];
 		if (body) {
-			body.setAttribute('repagination','isOff');
+			body.removeAttribute('repagination');
 		}
 	}
 	let menu = $('repagination_menu');
@@ -175,22 +175,15 @@ function repagination(window) {
 			menu.hidden = false;
 			return;
 		}
-
-		var doc = window.gContextMenu.target.ownerDocument;
-		var body = doc.getElementsByTagName('body')[0];
-		if (!body) {
-			menu.hidden = true;
-			return;
+		try {
+			if (window.gContextMenu.target.ownerDocument.body
+				.hasAttribute('repagination')) {
+				// show the menu so the user may abort
+				menu.hidden = false;
+			}
 		}
-
-		var result = body.getAttribute('repagination');
-		if (!result) {
-			menu.hidden = true;
-			return;
-		}
-		if(result == 'isOn') {
-			menu.hidden = false;
-			return;
+		catch (ex) {
+			// no op
 		}
 		menu.hidden = true;
 	}, true);
@@ -261,17 +254,16 @@ Repaginator.prototype = {
 				throw new Error("No node");
 			}
 
-			win.document.body.setAttribute('repagination','isOn');
 
 			let self = this;
 			let frame = createFrame(win, node.href, function(event) {
 				self.loadNext(this);
 			});
-			win.document.body.setAttribute('repagination', 'isOn');
+			win.document.body.setAttribute('repagination', 'true');
 		}
 		catch (ex) {
 			this.restoreTitle();
-			win.document.body.setAttribute('repagination','isOff');
+			win.document.body.removeAttribute('repagination');
 			reportError(ex);
 		}
 	},
@@ -292,7 +284,7 @@ Repaginator.prototype = {
 			return;
 		}
 		try {
-			if (ownerDoc.body.getAttribute('repagination') != 'isOn')	{
+			if (!ownerDoc.body.hasAttribute('repagination'))	{
 				throw new Error("Not running");
 			}
 
@@ -300,14 +292,20 @@ Repaginator.prototype = {
 			this.pagecounter++;
 
 			// remove futher scripts
-			Array.forEach(doc.querySelectorAll('script'), function(s) s.parentNode.removeChild(s));
+			Array.forEach(
+				doc.querySelectorAll('script'),
+				function(s) s.parentNode.removeChild(s)
+			);
 
 			if (this.slideshow) {
 				ownerDoc.body.innerHTML = doc.body.innerHTML;
-				ownerDoc.body.setAttribute('repagination', 'isOn');
+				ownerDoc.body.setAttribute('repagination', 'true');
 			}
 			else {
-				Array.forEach(doc.body.children, function(c) ownerDoc.body.appendChild(ownerDoc.importNode(c, true)));
+				Array.forEach(
+					doc.body.children,
+					function(c) ownerDoc.body.appendChild(ownerDoc.importNode(c, true))
+				);
 			}
 
 			var savedQuery;
@@ -368,7 +366,7 @@ Repaginator.prototype = {
 		}
 		catch (ex) {
 			this.restoreTitle();
-			ownerDoc.body.setAttribute('repagination','isOff');
+			ownerDoc.body.removeAttribute('repagination');
 		}
 
 		// kill the frame again

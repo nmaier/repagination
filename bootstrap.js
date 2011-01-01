@@ -248,7 +248,7 @@ Repaginator.prototype = {
 		if(!this._title) {
 			this._title = this._window.document.title;
 		}
-		if (!this.noLimit) {
+		if (!this.nolimit && this.pageLimit) {
 			this._window.document.title = "Re-Pagination ("
 				+ this.pagecounter + " of " + this.pagelimit
 				+ ") running ...";

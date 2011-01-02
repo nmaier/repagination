@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	<Description about="urn:mozilla:install-manifest">
-		<em:id>repagination@tn123.org</em:id>
+		<em:id>{6072cb90-a0bd-11da-a746-0800200c9a66}</em:id>
 		<em:name>Re-Pagination</em:name>
-		<em:version>2</em:version>
+		<em:version>2011.01.02</em:version>
 
 		<em:bootstrap>true</em:bootstrap>
 		<em:type>2</em:type>

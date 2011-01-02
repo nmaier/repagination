@@ -179,7 +179,8 @@ function repagination(window) {
 			);
 			menu.hidden = hidden;
 		}
-		if (window.gContextMenu.onLink) {
+		if (window.gContextMenu.onLink
+			&& /^https?:/.test(document.commandDispatcher.focusedElement.href)) {
 			setMenuHidden(false);
 			try {
 				if (!window.gContextMenu.target.ownerDocument.body
@@ -280,7 +281,6 @@ Repaginator.prototype = {
 			if (!node) {
 				throw new Error("No node");
 			}
-
 
 			let self = this;
 			let frame = createFrame(win, node.href, function(event) {

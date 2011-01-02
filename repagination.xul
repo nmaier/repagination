@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <overlay id="repagination" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<script type="application/x-javascript"><![CDATA[
+    // loader stub for pre-moz-2.0
 		addEventListener('load', function() {
 			removeEventListener('load', arguments.callee, true);
 			let _m = {};
@@ -11,33 +12,33 @@
 	<popup id="contentAreaContextMenu">
 		<menu label="Re-Pagination" insertbefore="context-sep-open" id="repagination_menu">
 			<menupopup>
-				<menuitem id="repagination_flatten_nolimit" label="All" />
+				<menuitem id="repagination_flatten_nolimit" label="Load all" />
 				<menu id="repagination_flat_limit_menu" label="Limited">
 					<menupopup>
-						<menuitem label="2" />
-						<menuitem label="5" />
-						<menuitem label="10" />
-						<menuitem label="15" />
-						<menuitem label="20" />
-						<menuitem label="25" />
-						<menuitem label="30" />
-						<menuitem label="35" />
-						<menuitem label="40" />
-						<menuitem label="100" />
+						<menuitem label="2 pages" />
+						<menuitem label="5 pages" />
+						<menuitem label="10 pages" />
+						<menuitem label="15 pages" />
+						<menuitem label="20 pages" />
+						<menuitem label="25 pages" />
+						<menuitem label="30 pages" />
+						<menuitem label="40 pages" />
+						<menuitem label="50 pages" />
+						<menuitem label="100 pages" />
 					</menupopup>
 				</menu>
-				<menu id="repagination_flat_nolimit_slide" label="SlideShow">
+				<menu id="repagination_flat_nolimit_slide" label="Slide Show">
 					<menupopup>
-						<menuitem label="0 sec" value="0" />
-						<menuitem label="1 sec" value="1" />
-						<menuitem label="2 sec" value="2" />
-						<menuitem label="4 sec" value="4" />
-						<menuitem label="5 sec" value="5" />
-						<menuitem label="8 sec" value="8" />
-						<menuitem label="10 sec" value="10" />
-						<menuitem label="16 sec" value="16" />
-						<menuitem label="32 sec" value="32" />
-						<menuitem label="64 sec" value="64" />
+						<menuitem label="Immediately" value="0" />
+						<menuitem label="1 second" value="1" />
+						<menuitem label="2 seconds" value="2" />
+						<menuitem label="4 seconds" value="4" />
+						<menuitem label="5 seconds" value="5" />
+						<menuitem label="8 seconds" value="8" />
+						<menuitem label="10 seconds" value="10" />
+						<menuitem label="16 seconds" value="16" />
+						<menuitem label="32 seconds" value="32" />
+						<menuitem label="64 seconds" value="64" />
 					</menupopup>
 				</menu>
 				<menuitem id="repagination_stop" label="Stop" />

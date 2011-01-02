@@ -26,6 +26,6 @@
 				<em:minVersion>2.1b1</em:minVersion>
 				<em:maxVersion>2.1b2</em:maxVersion>
 			</Description>
-		</em:targetAplication>
+		</em:targetApplication>
 	</Description>
 </RDF>

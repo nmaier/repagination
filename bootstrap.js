@@ -69,6 +69,20 @@ function createFrame(window, src, loadFun) {
 		frame.removeEventListener('load', arguments.callee, false);
 		loadFun.call(frame);
 	}, false);
+	let errorCount = 0;
+	frame.addEventListener('error', function() {
+		reportError("Failed to load: " + src);
+		if (++errorCount > 5) {
+			frame.removeEventListener('error', arguments.callee, false);
+			loadFun.call(frame);
+			return;
+		}
+		if (frame.history) {
+			frame.history.reload();
+			return;
+		}
+		frame.src = src;
+	}, false);
 
 	return frame;
 }

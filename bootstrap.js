@@ -168,10 +168,8 @@ function repagination(window) {
 			body.removeAttribute('repagination');
 		}
 	}
-	let menu = $('repagination_menu');
-	let menu_stop = $('repagination_stop');
-	let contextMenu = $('contentAreaContextMenu');
-	contextMenu.addEventListener('popupshowing', function() {
+
+	function onContextMenu() {
 		function setMenuHidden(hidden) {
 			Array.forEach(
 				menu.menupopup.childNodes,
@@ -205,7 +203,12 @@ function repagination(window) {
 		catch (ex) {
 			// no op
 		}
-	}, true);
+	}
+	let menu = $('repagination_menu');
+	let menu_stop = $('repagination_stop');
+	let contextMenu = $('contentAreaContextMenu');
+	contextMenu.addEventListener('popupshowing', onContextMenu, false);
+	addUnloader(function() contextMenu.removeEventListener('popupshowing', onContextMenu, false));
 
 	// All
 	$('repagination_flatten_nolimit').addEventListener('command', function(event) {
@@ -414,7 +417,13 @@ Repaginator.prototype = {
 /* ***
  bootstrap specific
  * ***/
-const {install: install, uninstall: uninstall, startup: startup, shutdown: shutdown} = (function() {
+const {
+	install: install,
+	uninstall: uninstall,
+	startup: startup,
+	shutdown: shutdown,
+	addUnloader: addUnloader
+} = (function() {
 	try {
 		Cu.import("resource://gre/modules/AddonManager.jsm");
 		Cu.import("resource://gre/modules/Services.jsm");
@@ -660,10 +669,23 @@ const {install: install, uninstall: uninstall, startup: startup, shutdown: shutd
 		// Addon manager startup entry
 		function startup(data) AddonManager.getAddonByID(data.id, loadXUL.bind(null, "repagination.xul", repagination));
 
-		return {install: install, uninstall: uninstall, startup: startup, shutdown: shutdown};
+		return {
+			install: install,
+			uninstall: uninstall,
+			startup: startup,
+			shutdown: shutdown,
+			addUnloader: addUnloader
+			};
 	}
 	catch (ex) {
 		// pre-moz2
-		return {install: null, uninstall: null, startup: null, shutdown: null};
+		// return stubs
+		return {
+			install: null,
+			uninstall: null,
+			startup: null,
+			shutdown: null,
+			addUnloader: function() {}
+			};
 	}
 })();

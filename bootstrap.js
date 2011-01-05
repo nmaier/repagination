@@ -249,11 +249,16 @@ Repaginator.prototype = {
 		if(!this._title) {
 			this._title = this._window.document.title;
 		}
-		if (!this.nolimit && this.pageLimit) {
+		if (!this.nolimit && this.pagelimit) {
 			this._window.document.title = "Re-Pagination ("
 				+ this.pagecounter + " of " + this.pagelimit
 				+ ") running ...";
 		}
+    else if (this.pagecounter > 0) {
+			this._window.document.title = "Re-Pagination "
+        + this.pagecounter
+        + " running...";
+    }
 		else {
 			this._window.document.title = "Re-Pagination running...";
 		}

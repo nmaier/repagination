@@ -198,7 +198,7 @@ function repagination(window) {
 				if (!window.gContextMenu.target.ownerDocument.body
 					.hasAttribute('repagination')) {
 					// Not running, don't show stop
-					menu_stop.hidden = true;
+					stopMenu.hidden = true;
 				}
 			}
 			catch (ex) {
@@ -211,43 +211,55 @@ function repagination(window) {
 			if (window.gContextMenu.target.ownerDocument.body
 				.hasAttribute('repagination')) {
 				// show the menu so the user may abort
-				menu.hidden = menu_stop.hidden = false;
+				menu.hidden = stopMenu.hidden = false;
 			}
 		}
 		catch (ex) {
 			// no op
 		}
 	}
-	let menu = $('repagination_menu');
-	let menu_stop = $('repagination_stop');
-	let contextMenu = $('contentAreaContextMenu');
-	contextMenu.addEventListener('popupshowing', onContextMenu, false);
-	addUnloader(function() contextMenu.removeEventListener('popupshowing', onContextMenu, false));
-
-	// All
-	$('repagination_flatten_nolimit').addEventListener('command', function(event) {
-		blast();
-	}, true);
-	// Stop
-	$('repagination_stop').addEventListener('command', function(event) {
-		stop();
-	}, true);
-	// Limit
-	$('repagination_flat_limit_menu').addEventListener('command', function(event) {
+	function onAll() blast();
+	function onStop() stop();
+	function onLimitCommand(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
 		}
 		blast(parseInt(t.getAttribute('label'), 10));
-	}, true);
-	// Slideshow
-	$('repagination_flat_nolimit_slide').addEventListener('command', function(event) {
+	}
+	function onSlideCommand(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
 		}
 		blast(parseInt(t.getAttribute('value'), 10), true);
-	}, true);
+	}
+
+	let menu = $('repagination_menu');
+	let contextMenu = $('contentAreaContextMenu');
+	let allMenu = $('repagination_flatten_nolimit');
+	let stopMenu = $('repagination_stop');
+	let limitMenu = $('repagination_flat_limit_menu');
+	let slideMenu = $('repagination_flat_nolimit_slide');
+
+	contextMenu.addEventListener('popupshowing', onContextMenu, false);
+	allMenu.addEventListener('command', onAll, true);
+	stopMenu.addEventListener('command', onStop, true);
+	limitMenu.addEventListener('command', onLimitCommand, true);
+	slideMenu.addEventListener('command', onSlideCommand, true);
+	addWindowUnloader(window, function() {
+		delete menu;
+		contextMenu.removeEventListener('popupshowing', onContextMenu, false);
+		delete contextMenu;
+		allMenu.removeEventListener('command', onAll, true);
+		delete allMenu;
+		stopMenu.removeEventListener('command', onStop, true);
+		delete stopMenu;
+		limitMenu.removeEventListener('command', onLimitCommand, true);
+		delete limitMenu;
+		slideMenu.removeEventListener('command', onSlideCommand, true);
+		delete slideMenu;
+	});
 }
 
 /**
@@ -424,9 +436,24 @@ Repaginator.prototype = {
 		}
 
 		// kill the frame again
-		setTimeout(function() element.parentNode.removeChild(element), 0);
+		if (element && element.parentNode) {
+			setTimeout(function() element.parentNode.removeChild(element), 0);
+		}
 	}
 };
+
+function addWindowUnloader(window, fn) {
+	let handler = addUnloader(function() {
+		window.removeEventListener('unload', handler, false);
+		try {
+			fn();
+		}
+		catch (ex) {
+			reportError(ex);
+		}
+	});
+	window.addEventListener('unload', handler, false);
+}
 
 /* ***
  bootstrap specific
@@ -575,11 +602,7 @@ const {
 
 				// install per-window unloader
 				if (unloaders.length) {
-					let handler = addUnloader(function() {
-						window.removeEventListener('unload', handler, false);
-						unloaders.forEach(function(u) u());
-					});
-					window.addEventListener('unload', handler, false);
+					addWindowUnloader(window, function() unloaders.forEach(function(u) u()));
 				}
 
 				// run next
@@ -699,7 +722,9 @@ const {
 			uninstall: null,
 			startup: null,
 			shutdown: null,
-			addUnloader: function() {}
-			};
+			addUnloader: function(u) {
+				return function() { u(); };
+			}
+		};
 	}
 })();

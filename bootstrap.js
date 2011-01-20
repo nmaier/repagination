@@ -248,17 +248,17 @@ function repagination(window) {
 	limitMenu.addEventListener('command', onLimitCommand, true);
 	slideMenu.addEventListener('command', onSlideCommand, true);
 	addWindowUnloader(window, function() {
-		delete menu;
+		menu = null;
 		contextMenu.removeEventListener('popupshowing', onContextMenu, false);
-		delete contextMenu;
+		contextMenu = null;
 		allMenu.removeEventListener('command', onAll, true);
-		delete allMenu;
+		allMenu = null;
 		stopMenu.removeEventListener('command', onStop, true);
-		delete stopMenu;
+		stopMenu = null;
 		limitMenu.removeEventListener('command', onLimitCommand, true);
-		delete limitMenu;
+		limitMenu = null;
 		slideMenu.removeEventListener('command', onSlideCommand, true);
-		delete slideMenu;
+		slideMenu = null;
 	});
 }
 

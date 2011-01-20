@@ -283,11 +283,11 @@ Repaginator.prototype = {
 				+ this.pagecounter + " of " + this.pagelimit
 				+ ") running ...";
 		}
-    else if (this.pagecounter > 0) {
+		else if (this.pagecounter > 0) {
 			this._window.document.title = "Re-Pagination "
-        + this.pagecounter
-        + " running...";
-    }
+				+ this.pagecounter
+				+ " running...";
+		}
 		else {
 			this._window.document.title = "Re-Pagination running...";
 		}

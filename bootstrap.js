@@ -769,11 +769,41 @@ const {
 		}
 		shutdown.unloaders = [];
 
+		function initStringBundle(addon) {
+			let cm = new XMLHttpRequest();
+			cm.onload = function() {
+				// get supported locales
+				cm = cm.responseText
+					.split(/\n/g)
+					.filter(function(line) /^locale/.test(line))
+					.map(function(line) line.split(/\s/g)[2]);
+
+				// get selected locale
+				let xr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+				let locale = xr.getSelectedLocale('global');
+
+				// exact match?
+				let idx = cm.indexOf(locale);
+				if (idx < 0) {
+					// best match?
+					idx = cm.map(function(l) l.split("-")[0]).indexOf(locale.split("-")[0]);
+				}
+
+				// load the string bundle
+				let sb = addon.getResourceURI(
+					'locale/'
+					+ cm[Math.max(0, idx)]
+					+ '/repagination.properties').spec;
+				strings = StringBundleService.createBundle(sb);
+			};
+			cm.overrideMimeType('text/plain');
+			cm.open('GET', addon.getResourceURI('chrome.manifest').spec);
+			cm.send();
+		}
+
 		// Addon manager startup entry
 		function startup(data) AddonManager.getAddonByID(data.id, function(addon) {
-			// XXX load correct locale
-			let sb = addon.getResourceURI('locale/en-US/repagination.properties').spec;
-			strings = StringBundleService.createBundle(sb);
+			initStringBundle(addon);
 			loadXUL("repagination.xul", repagination, addon);
 		});
 

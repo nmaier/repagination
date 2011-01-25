@@ -8,7 +8,7 @@
 		<em:bootstrap>true</em:bootstrap>
 		<em:type>2</em:type>
 
-		<em:description>Right-click a "next" or "previous" or "2" link and flatten all results to one page.</em:description>
+		<em:description>Load all consecutive pages in a single tab at once.</em:description>
 		<em:creator>Nils Maier</em:creator>
 		<em:developer>Nils Maier</em:developer>
 		<em:developer>Lev, Omar</em:developer>

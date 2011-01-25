@@ -1,3 +1,4 @@
-overlay	chrome://browser/content/browser.xul	chrome://repagination/content/
-content	repagination	./
+overlay chrome://browser/content/browser.xul chrome://repagination/content/
+content repagination ./
+locale repagination en-US locale/en-US/
 resource repagination ./

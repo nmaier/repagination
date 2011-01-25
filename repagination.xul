@@ -10,38 +10,38 @@
 		}, true);
 	]]></script>
 	<popup id="contentAreaContextMenu">
-		<menu label="Re-Pagination" insertbefore="context-sep-open" id="repagination_menu">
+		<menu label="repagination" insertbefore="context-sep-open" id="repagination_menu">
 			<menupopup>
-				<menuitem id="repagination_flatten_nolimit" label="Load all" />
-				<menu id="repagination_flat_limit_menu" label="Limited">
+				<menuitem id="repagination_flatten_nolimit" label="loadall" />
+				<menu id="repagination_flat_limit_menu" label="limited">
 					<menupopup>
-						<menuitem label="2 pages" />
-						<menuitem label="5 pages" />
-						<menuitem label="10 pages" />
-						<menuitem label="15 pages" />
-						<menuitem label="20 pages" />
-						<menuitem label="25 pages" />
-						<menuitem label="30 pages" />
-						<menuitem label="40 pages" />
-						<menuitem label="50 pages" />
-						<menuitem label="100 pages" />
+						<menuitem label="limited.pages(2)" value="2" />
+						<menuitem label="limited.pages(5)" value="5" />
+						<menuitem label="limited.pages(10)" value="10" />
+						<menuitem label="limited.pages(15)" value="15" />
+						<menuitem label="limited.pages(20)" value="20" />
+						<menuitem label="limited.pages(25)" value="25" />
+						<menuitem label="limited.pages(30)" value="30" />
+						<menuitem label="limited.pages(40)" value="40" />
+						<menuitem label="limited.pages(50)" value="50"/>
+						<menuitem label="limited.pages(100)" value="100" />
 					</menupopup>
 				</menu>
-				<menu id="repagination_flat_nolimit_slide" label="Slide Show">
+				<menu id="repagination_flat_nolimit_slide" label="slideshow">
 					<menupopup>
-						<menuitem label="Immediately" value="0" />
-						<menuitem label="1 second" value="1" />
-						<menuitem label="2 seconds" value="2" />
-						<menuitem label="4 seconds" value="4" />
-						<menuitem label="5 seconds" value="5" />
-						<menuitem label="8 seconds" value="8" />
-						<menuitem label="10 seconds" value="10" />
-						<menuitem label="16 seconds" value="16" />
-						<menuitem label="32 seconds" value="32" />
-						<menuitem label="64 seconds" value="64" />
+						<menuitem label="slideshow.immediately" value="0" />
+						<menuitem label="slideshow.second" value="1" />
+						<menuitem label="slideshow.seconds(2)" value="2" />
+						<menuitem label="slideshow.seconds(4)" value="4" />
+						<menuitem label="slideshow.seconds(5)" value="5" />
+						<menuitem label="slideshow.seconds(10)" value="10" />
+						<menuitem label="slideshow.seconds(15)" value="15" />
+						<menuitem label="slideshow.seconds(30)" value="30" />
+						<menuitem label="slideshow.minute" value="60" />
+						<menuitem label="slideshow.minutes(2)" value="120" />
 					</menupopup>
 				</menu>
-				<menuitem id="repagination_stop" label="Stop" />
+				<menuitem id="repagination_stop" label="stop" />
 			</menupopup>
 		</menu>
 	</popup>

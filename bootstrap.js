@@ -48,6 +48,68 @@ const reportError = Cu.reportError;
 const regxNumber = /[0-9]+/;
 const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(
+	this,
+	"StringBundleService",
+	"@mozilla.org/intl/stringbundle;1",
+	"nsIStringBundleService");
+
+// must receive the string bundle
+let strings = null;
+
+/**
+ * Get a localized and/or formatted string
+ *
+ * @usage _('string')
+ * @usage _('formated', param1, ...)
+ * @param [String] id
+ * @param [String] ...
+ * @return [String] localized string
+ */
+function _() {
+	if (arguments.length == 0) {
+		return 0;
+	}
+	if (arguments.length == 1) {
+		return strings.GetStringFromName(arguments[0]);
+	}
+	let args = Array.map(arguments, function(e) e);
+	let id = args.shift();
+	return strings.formatStringFromName(id, args, args.length);
+};
+
+/**
+ * Localizes a node
+ *
+ * @usage __(node)
+ * @param [DOMNode] node
+ */
+function __(node) {
+	const attrs = ['label', 'tooltiptext'];
+	function localize(node, attr) {
+		try {
+			let v = node.getAttribute(attr);
+			if (!v) {
+				return;
+			}
+			let m = v.match(/^(.+?)\((.+?)\)$/);
+			if (!m) {
+				v = _(v);
+			}
+			else {
+				v = _.apply(null, [m[1]].concat(m[2].split(/,/g)));
+			}
+			node.setAttribute(attr, v);
+		}
+		catch (ex) {
+			reportError(ex);
+		}
+	}
+	attrs.forEach(function(a) localize(node, a));
+};
+
 function getFirstSnapshot(doc, node, query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
@@ -99,6 +161,8 @@ function repagination(window) {
 	var document = window.document;
 
 	function $(id) document.getElementById(id);
+	function __r(node) __(node) + Array.forEach(node.getElementsByTagName("*"), __);
+
 
 	function blast(num, isslide) {
 		var focusElement = document.commandDispatcher.focusedElement;
@@ -225,7 +289,7 @@ function repagination(window) {
 		if (t.localName != 'menuitem') {
 			return;
 		}
-		blast(parseInt(t.getAttribute('label'), 10));
+		blast(parseInt(t.getAttribute('value'), 10));
 	}
 	function onSlideCommand(event) {
 		let t = event.target;
@@ -236,6 +300,7 @@ function repagination(window) {
 	}
 
 	let menu = $('repagination_menu');
+	__r(menu);
 	let contextMenu = $('contentAreaContextMenu');
 	let allMenu = $('repagination_flatten_nolimit');
 	let stopMenu = $('repagination_stop');
@@ -463,7 +528,7 @@ const {
 	uninstall: uninstall,
 	startup: startup,
 	shutdown: shutdown,
-	addUnloader: addUnloader
+	addUnloader: addUnloader,
 } = (function() {
 	try {
 		Cu.import("resource://gre/modules/AddonManager.jsm");
@@ -700,11 +765,17 @@ const {
 					reportError("Unloader threw" + u.toSource());
 				}
 			}
+			StringBundleService.flushBundles();
 		}
 		shutdown.unloaders = [];
 
 		// Addon manager startup entry
-		function startup(data) AddonManager.getAddonByID(data.id, loadXUL.bind(null, "repagination.xul", repagination));
+		function startup(data) AddonManager.getAddonByID(data.id, function(addon) {
+			// XXX load correct locale
+			let sb = addon.getResourceURI('locale/en-US/repagination.properties').spec;
+			strings = StringBundleService.createBundle(sb);
+			loadXUL("repagination.xul", repagination, addon);
+		});
 
 		return {
 			install: install,
@@ -717,6 +788,7 @@ const {
 	catch (ex) {
 		// pre-moz2
 		// return stubs
+		strings = StringBundleService.createBundle("chrome://repagination/locale/repagination.properties")
 		return {
 			install: null,
 			uninstall: null,

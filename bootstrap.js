@@ -344,17 +344,16 @@ Repaginator.prototype = {
 			this._title = this._window.document.title;
 		}
 		if (!this.nolimit && this.pagelimit) {
-			this._window.document.title = "Re-Pagination ("
-				+ this.pagecounter + " of " + this.pagelimit
-				+ ") running ...";
+			this._window.document.title = _('repagination_limited',
+				this.pagecounter,
+				this.pagelimit);
 		}
 		else if (this.pagecounter > 0) {
-			this._window.document.title = "Re-Pagination "
-				+ this.pagecounter
-				+ " running...";
+			this._window.document.title = _('repagination_unlimited',
+				this.pagecounter);
 		}
 		else {
-			this._window.document.title = "Re-Pagination running...";
+			this._window.document.title = _('repagination_running');
 		}
 	},
 	restoreTitle: function() {

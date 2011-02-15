@@ -38,12 +38,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const EXPORTED_SYMBOLS = ['repagination'];
+const PACKAGE = "repagination";
+
+const EXPORTED_SYMBOLS = ['main'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const reportError = Cu.reportError;
+
+const global = this;
 
 const regxNumber = /[0-9]+/;
 const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
@@ -157,7 +161,7 @@ if (!('setTimeout' in this)) {
 /**
  * Setup repagination for a window
  */
-function repagination(window) {
+function main(window) {
 	var document = window.document;
 
 	function $(id) document.getElementById(id);
@@ -792,7 +796,7 @@ const {
 				let sb = addon.getResourceURI(
 					'locale/'
 					+ cm[Math.max(0, idx)]
-					+ '/repagination.properties').spec;
+					+ '/' + PACKAGE + '.properties').spec;
 				strings = StringBundleService.createBundle(sb);
 			};
 			cm.overrideMimeType('text/plain');
@@ -803,7 +807,7 @@ const {
 		// Addon manager startup entry
 		function startup(data) AddonManager.getAddonByID(data.id, function(addon) {
 			initStringBundle(addon);
-			loadXUL("repagination.xul", repagination, addon);
+			loadXUL(PACKAGE + ".xul", main, addon);
 		});
 
 		return {
@@ -817,7 +821,12 @@ const {
 	catch (ex) {
 		// pre-moz2
 		// return stubs
-		strings = StringBundleService.createBundle("chrome://repagination/locale/repagination.properties")
+		strings = StringBundleService.createBundle(
+			"chrome://"
+			+ PACKAGE
+			+ "/locale/"
+			+ PACKAGE
+			+ ".properties");
 		return {
 			install: null,
 			uninstall: null,

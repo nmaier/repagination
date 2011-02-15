@@ -6,7 +6,7 @@
 			removeEventListener('load', arguments.callee, true);
 			let _m = {};
 			Components.utils.import("resource://repagination/bootstrap.js", _m);
-			_m.repagination(window);
+			_m.main(window);
 		}, true);
 	]]></script>
 	<popup id="contentAreaContextMenu">

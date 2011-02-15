@@ -598,6 +598,8 @@ const {
 		 *
 		 * @author Nils Maier
 		 * @param [object] xul: object-dict containing the target-id/Element
+		 * @param [function] next: next function to run
+		 * @param [window] window to set up
 		 */
 		function setupWindow(xul, next, window) {
 			try {
@@ -674,7 +676,7 @@ const {
 				}
 
 				// run next
-				next(window);
+				next && next(window);
 			}
 			catch (ex) {
 				reportError(ex);

@@ -528,7 +528,7 @@ const {
 	uninstall: uninstall,
 	startup: startup,
 	shutdown: shutdown,
-	addUnloader: addUnloader,
+	addUnloader: addUnloader
 } = (function() {
 	try {
 		Cu.import("resource://gre/modules/AddonManager.jsm");

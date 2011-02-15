@@ -5,6 +5,7 @@ from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
 resources = [
     "*.xul",
     "*.js",
+    "locale/*/repagination.properties",
     "icon*.png",
     "install.rdf", "chrome.manifest",
     "COPYING"

@@ -795,7 +795,9 @@ const {
 		}
 
 		// Addon manager post-install entry
-		function install(){}
+		function install() {
+			StringBundleService.flushBundles();
+		}
 
 		// Addon manager pre-uninstall entry
 		function uninstall(){}
@@ -814,7 +816,6 @@ const {
 					reportError("Unloader threw" + u.toSource());
 				}
 			}
-			StringBundleService.flushBundles();
 		}
 		shutdown.unloaders = [];
 

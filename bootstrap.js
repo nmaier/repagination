@@ -168,7 +168,7 @@ function main(window) {
 	function __r(node) __(node) + Array.forEach(node.getElementsByTagName("*"), __);
 
 
-	function blast(num, isslide) {
+	function repaginate(num, slideshow) {
 		var focusElement = document.commandDispatcher.focusedElement;
 		if (!focusElement) {
 			throw new Error("No focus element");
@@ -176,7 +176,7 @@ function main(window) {
 		var doc = focusElement.ownerDocument;
 		var repaginator = new Repaginator();
 
-		if (isslide && num) {
+		if (slideshow && num) {
 			repaginator.seconds = num;
 			repaginator.slideshow = true;
 			repaginator.nolimit = true;
@@ -235,7 +235,7 @@ function main(window) {
 			}
 		}
 
-		repaginator.blast(doc.defaultView);
+		repaginator.repaginate(doc.defaultView);
 	}
 	function stop() {
 		if (!window.gContextMenu || !window.gContextMenu.target) {
@@ -286,21 +286,21 @@ function main(window) {
 			// no op
 		}
 	}
-	function onAll() blast();
+	function onAll() repaginate();
 	function onStop() stop();
 	function onLimitCommand(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
 		}
-		blast(parseInt(t.getAttribute('value'), 10));
+		repaginate(parseInt(t.getAttribute('value'), 10));
 	}
 	function onSlideCommand(event) {
 		let t = event.target;
 		if (t.localName != 'menuitem') {
 			return;
 		}
-		blast(parseInt(t.getAttribute('value'), 10), true);
+		repaginate(parseInt(t.getAttribute('value'), 10), true);
 	}
 
 	let menu = $('repagination_menu');
@@ -367,7 +367,7 @@ Repaginator.prototype = {
 		}
 	},
 
-	blast: function(win) {
+	repaginate: function(win) {
 		this._window = win;
 		this.setTitle();
 

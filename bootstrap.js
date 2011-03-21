@@ -174,21 +174,16 @@ function main(window) {
 			throw new Error("No focus element");
 		}
 		var doc = focusElement.ownerDocument;
-		var repaginator = new Repaginator();
+		var repaginator;
 
 		if (slideshow && num) {
-			repaginator.seconds = num;
-			repaginator.slideshow = true;
-			repaginator.nolimit = true;
+			repaginator = new Slideshow(num);
 		}
 		else if (num) {
-			repaginator.slideshow = false;
-			repaginator.pagelimit = num;
-			repaginator.nolimit = false;
+			repaginator = new Repaginator(num);
 		}
 		else {
-			repaginator.slideshow = false;
-			repaginator.nolimit = true;
+			repaginator = new Repaginator();
 		}
 		var searchpathtext = '';
 		var range = doc.createRange();
@@ -223,9 +218,6 @@ function main(window) {
 			}
 		}
 		repaginator.query += "[last()]";
-
-		repaginator.numberToIncrement = null;
-		repaginator.attemptToIncrement = false;
 
 		if (!regx2Numbers.test(repaginator.query)) {
 			var test = regxNumber.exec(repaginator.query);
@@ -334,8 +326,16 @@ function main(window) {
 /**
  * Repaginator implementation
  */
-function Repaginator() {}
+function Repaginator(count) {
+	this.pagelimit = count || 0;
+	this.nolimit = !this.pagelimit;
+}
 Repaginator.prototype = {
+	nolimit: false,
+	slideshow: false,
+	pagelimit: 0,
+	seconds: 0,
+
 	enabled: false,
 	pagecounter: 0,
 	beforeNum: '',
@@ -508,6 +508,15 @@ Repaginator.prototype = {
 			setTimeout(function() element.parentNode.removeChild(element), 0);
 		}
 	}
+};
+
+function Slideshow(seconds) {
+	this.seconds = seconds || 0;
+	this.nolimit = true;
+	this.slideshow = true;
+}
+Slideshow.prototype = {
+	__proto__: Repaginator.prototype
 };
 
 function addWindowUnloader(window, fn) {
@@ -856,3 +865,5 @@ const {
 		};
 	}
 })();
+
+/* vim: set noet ts=2 sw=2 : */

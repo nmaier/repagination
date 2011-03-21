@@ -327,34 +327,26 @@ function main(window) {
  * Repaginator implementation
  */
 function Repaginator(count) {
-	this.pagelimit = count || 0;
-	this.nolimit = !this.pagelimit;
+	this.pageLimit = count || 0;
 }
 Repaginator.prototype = {
-	nolimit: false,
 	slideshow: false,
-	pagelimit: 0,
+	pageLimit: 0,
 	seconds: 0,
-
-	enabled: false,
-	pagecounter: 0,
-	beforeNum: '',
-	afterNum: '',
-	numStr: '',
-	isSelect: true,
+	pageCount: 0,
 
 	setTitle: function() {
 		if(!this._title) {
 			this._title = this._window.document.title;
 		}
-		if (!this.nolimit && this.pagelimit) {
+		if (this.pageLimit) {
 			this._window.document.title = _('repagination_limited',
-				this.pagecounter,
-				this.pagelimit);
+				this.pageCount,
+				this.pageLimit);
 		}
-		else if (this.pagecounter > 0) {
+		else if (this.pageCount > 0) {
 			this._window.document.title = _('repagination_unlimited',
-				this.pagecounter);
+				this.pageCount);
 		}
 		else {
 			this._window.document.title = _('repagination_running');
@@ -418,7 +410,7 @@ Repaginator.prototype = {
 			}
 
 			var doc = element.contentDocument;
-			this.pagecounter++;
+			this.pageCount++;
 
 			// remove futher scripts
 			// Note: this is not a security mechanism, but a performance
@@ -482,7 +474,7 @@ Repaginator.prototype = {
 				throw new Error("Location match (nothing new): " + location + ", " + node.href);
 			}
 
-			if (!this.nolimit && this.pagecounter >= this.pagelimit) {
+			if (this.pageLimit && this.pageCount >= this.pageLimit) {
 				throw new Error("Done");
 			}
 
@@ -512,7 +504,6 @@ Repaginator.prototype = {
 
 function Slideshow(seconds) {
 	this.seconds = seconds || 0;
-	this.nolimit = true;
 	this.slideshow = true;
 }
 Slideshow.prototype = {

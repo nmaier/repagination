@@ -169,56 +169,82 @@ function main(window) {
 
 
 	function repaginate(num, slideshow) {
+
+		// find the anchor
 		var focusElement = document.commandDispatcher.focusedElement;
-		if (!focusElement) {
-			throw new Error("No focus element");
-		}
-		var doc = focusElement.ownerDocument;
-		var repaginator;
-
-		if (slideshow && num) {
-			repaginator = new Slideshow(num);
-		}
-		else if (num) {
-			repaginator = new Repaginator(num);
-		}
-		else {
-			repaginator = new Repaginator();
-		}
-		var searchpathtext = '';
-		var range = doc.createRange();
-		range.selectNode(focusElement);
-		searchpathtext = range.toString();
-
-		repaginator.query = '//body';
-		if (searchpathtext) {
-			repaginator.query = "//a[.='" + searchpathtext + "']";
-		}
-		else if (focusElement.getAttribute('value'))	{
-			var input_value = focusElement.getAttribute('value');
-
-			if (input_value) {
-				repaginator.query = "//input[@value='" + input_value + "'][last()]/ancestor::a";
-			}
-		}
-		else if (focusElement.getAttribute('src')) {
-			var img_src = focusElement.getAttribute('src');
-
-			if (img_src)	{
-				repaginator.query = "//img[@src='" + img_src + "'][last()]/ancestor::a";
-			}
-		}
-		else if (focusElement instanceof window.HTMLAnchorElement) {
-			var srcObj = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
-			if (srcObj) {
-				var img_src = srcObj.getAttribute('src');
-				if (img_src) {
-					repaginator.query = "//img[@src='" + img_src + "'][last()]/ancestor::a";
+		(function findAnchor() {
+			for (let parent = focusElement; parent; parent = parent.parentNode) {
+				if (parent.localName == 'a') {
+					focusElement = parent;
+					return;
 				}
 			}
-		}
-		repaginator.query += "[last()]";
 
+			throw new Error("No focus element");
+		})();
+
+		var doc = focusElement.ownerDocument;
+		var repaginator = new (slideshow ? Slideshow : Repaginator)(num);
+
+		// find an id in the ancestor chain, or alternatively a class
+		// Note: cannot use id() xpath function here, as repagination might
+		// create multiple ids
+		(function findPathPrefix() {
+			let pieces = [];
+			for (let parent = focusElement.parentNode; parent; parent = parent.parentNode) {
+				if (parent.id) {
+					pieces.unshift("//" + parent.localName + "[@id='" + parent.id +"']");
+					break;
+				}
+				if (parent.className) {
+					pieces.unshift("//" + parent.localName + "[@class='" + parent.className +"']");
+				}
+			}
+			repaginator.query = pieces.join("");
+		})();
+
+		// find the a-element to look up
+		(function findExpression(){
+			let range = doc.createRange();
+			range.selectNode(focusElement);
+			let text = range.toString();
+
+			// First, see if the anchor has a text we can use
+			if (text.trim()) {
+				repaginator.query += "//a[.='" + text + "']";
+				return;
+			}
+
+			// Second, see if it has a child with a @src we may use
+			let srcElement = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
+			if (srcElement) {
+				let src = srcElement.getAttribute('src') || "";
+				if (src.trim()) {
+					repaginator.query += "//" + srcElement.localName
+						+ "[@src='" + src + "']]/ancestor::a";
+					return;
+				}
+			}
+
+			// Third, see if there is a child with a @value we may use
+			let valElement = getFirstSnapshot(doc, focusElement, 'child::*[@value]');
+			if (valElement) {
+				let val = valElement.getAttribute('value') || "";
+				if (val.trim()) {
+					repaginator.query += "//" + valElement.localName
+						+ "[@value='" + val + "']/ancestor::a";
+					return;
+				}
+			}
+
+			// Nothing else we might try
+			throw new Error("Repagination: no anchor expression found!");
+		})();
+
+		// we want the last
+		repaginator.query = "(" + repaginator.query + ")[last()]";
+
+		// If it is or contains a number, try to auto increment it
 		if (!regx2Numbers.test(repaginator.query)) {
 			var test = regxNumber.exec(repaginator.query);
 			if (test) {
@@ -328,6 +354,7 @@ function main(window) {
  */
 function Repaginator(count) {
 	this.pageLimit = count || 0;
+	this.query = "";
 }
 Repaginator.prototype = {
 	slideshow: false,
@@ -364,6 +391,7 @@ Repaginator.prototype = {
 		this.setTitle();
 
 		try {
+			//reportError(this.query);
 			let node = win.document.evaluate(
 				this.query,
 				win.document,
@@ -441,6 +469,7 @@ Repaginator.prototype = {
 				this.increment();
 			}
 
+			//reportError(this.query);
 			node = doc.evaluate(
 				this.query,
 				doc,
@@ -505,6 +534,7 @@ Repaginator.prototype = {
 function Slideshow(seconds) {
 	this.seconds = seconds || 0;
 	this.slideshow = true;
+	this.query = "";
 }
 Slideshow.prototype = {
 	__proto__: Repaginator.prototype

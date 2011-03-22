@@ -333,7 +333,7 @@ Repaginator.prototype = {
 				let src = srcElement.getAttribute('src') || "";
 				if (src.trim()) {
 					this.query += "//" + srcElement.localName
-						+ "[@src='" + src + "']]/ancestor::a";
+						+ "[@src='" + src + "']/ancestor::a";
 					return;
 				}
 			}

@@ -3,7 +3,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>{6072cb90-a0bd-11da-a746-0800200c9a66}</em:id>
 		<em:name>Re-Pagination</em:name>
-		<em:version>2011.03.21</em:version>
+		<em:version>2011.03.23</em:version>
 
 		<em:bootstrap>true</em:bootstrap>
 		<em:type>2</em:type>

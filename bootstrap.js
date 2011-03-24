@@ -49,9 +49,6 @@ const reportError = Cu.reportError;
 
 const global = this;
 
-const regxNumber = /[0-9]+/;
-const regx2Numbers = /[0-9]+[^0-9][0-9]+/;
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -279,6 +276,7 @@ Repaginator.prototype = {
 	pageLimit: 0,
 	seconds: 0,
 	pageCount: 0,
+	attemptToIncrement: true,
 
 	init: function(focusElement) {
 		this.query = "";
@@ -324,6 +322,7 @@ Repaginator.prototype = {
 			// First, see if the anchor has a text we can use
 			if (text.trim()) {
 				this.query += "//a[.='" + text + "']";
+				this.numberToken = /(a\[.='.*?)(\d+)(.*?'\])/;
 				return;
 			}
 
@@ -334,6 +333,7 @@ Repaginator.prototype = {
 				if (src.trim()) {
 					this.query += "//" + srcElement.localName
 						+ "[@src='" + src + "']/ancestor::a";
+					this.numberToken = /(\[@src='.*?)(\d+)(.*?'\])/;
 					return;
 				}
 			}
@@ -345,6 +345,7 @@ Repaginator.prototype = {
 				if (val.trim()) {
 					this.query += "//" + valElement.localName
 						+ "[@value='" + val + "']/ancestor::a";
+					this.numberToken = /(\[@value='.*?)(\d+)(.*?'\])/;
 					return;
 				}
 			}
@@ -356,14 +357,7 @@ Repaginator.prototype = {
 		// we want the last
 		this.query = "(" + this.query + ")[last()]";
 
-		// If it is or contains a number, try to auto increment it
-		if (!regx2Numbers.test(this.query)) {
-			var test = regxNumber.exec(this.query);
-			if (test) {
-				this.attemptToIncrement = true;
-				this.numberToIncrement = test[0];
-			}
-		}
+		//reportError(this.query);
 	},
 
 
@@ -421,13 +415,10 @@ Repaginator.prototype = {
 		}
 	},
 
-	increment: function() {
-		this.query = this.query.replace(
-			new RegExp(this.numberToIncrement, 'g'),
-			new Number(this.numberToIncrement) + 1
-			);
-		this.numberToIncrement++;
-	},
+	incrementQuery: function() this.query.replace(
+			this.numberToken,
+			function(g, pre, num, post) pre + (parseInt(num, 10) + 1) + post
+			),
 
 	loadNext: function(element) {
 		let ownerDoc = element.ownerDocument;
@@ -466,11 +457,14 @@ Repaginator.prototype = {
 
 			var savedQuery;
 			if (this.attemptToIncrement) {
-				savedQuery = this.query;
-				this.increment();
-			}
-			else if (this.numberToIncrement) {
-				this.increment();
+				let newQuery = this.incrementQuery();
+				if (newQuery == this.query) {
+					this.attemptToIncrement = false;
+				}
+				else {
+					savedQuery = this.query;
+					this.query = newQuery;
+				}
 			}
 
 			//reportError(this.query);
@@ -487,7 +481,6 @@ Repaginator.prototype = {
 			if (this.attemptToIncrement
 				&& (!node || node.href == location)) {
 				this.query = savedQuery;
-				this.numberToIncrement = null;
 
 				node = doc.evaluate(
 					this.query,
@@ -496,9 +489,8 @@ Repaginator.prototype = {
 					9,
 					null
 					).singleNodeValue;
+				this.attemptToIncrement = false;
 			}
-
-			this.attemptToIncrement = false;
 
 			if (!node) {
 				throw new Error("No next node found");
@@ -524,6 +516,7 @@ Repaginator.prototype = {
 			});
 		}
 		catch (ex) {
+			//reportError(ex);
 			this.restoreTitle();
 			ownerDoc.body.removeAttribute('repagination');
 		}

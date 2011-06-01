@@ -454,7 +454,14 @@ Repaginator.prototype = {
 					function(c) ownerDoc.body.appendChild(ownerDoc.importNode(c, true))
 				);
 			}
-
+			if (ownerDoc.defaultView) {
+				let levt = ownerDoc.createEvent("Events");
+				levt.initEvent("DOMContentLoaded", true, true);
+				ownerDoc.defaultView.dispatchEvent(levt);
+				levt = ownerDoc.createEvent("Events");
+				levt.initEvent("load", true, true);
+				ownerDoc.defaultView.dispatchEvent(levt);
+			}
 			var savedQuery;
 			if (this.attemptToIncrement) {
 				let newQuery = this.incrementQuery();

@@ -429,12 +429,25 @@ Repaginator.prototype = {
 			),
 
 	loadNext: function(element) {
+		try {
+			new CoThreadInterleaved(
+				this._loadNext_gen.bind(this, element)(),
+				1
+			).start();
+		}
+		catch (ex) {
+			reportError(ex);
+		}
+	},
+	_loadNext_gen: function(element) {
 		let ownerDoc = element.ownerDocument;
 		if (!ownerDoc) {
-			setTimeout(function() element.parentNode.removeChild(element), 0);
+			yield true;
+			element.parentNode.removeChild(element);
 			this.restoreTitle();
 			return;
 		}
+
 		try {
 			if (!ownerDoc.body.hasAttribute('repagination'))	{
 				throw new Error("Not running");
@@ -451,6 +464,7 @@ Repaginator.prototype = {
 				doc.querySelectorAll('script'),
 				function(s) s.parentNode.removeChild(s)
 			);
+			yield true;
 
 			// Remove non-same-origin iframes
 			// Otherwise we might create a shitload of (nearly) identical frames
@@ -466,17 +480,20 @@ Repaginator.prototype = {
 						}
 				);
 			}
+			yield true;
 
 			if (this.slideshow) {
 				ownerDoc.body.innerHTML = doc.body.innerHTML;
 				ownerDoc.body.setAttribute('repagination', 'true');
 			}
 			else {
-				Array.forEach(
-					doc.body.children,
-					function(c) ownerDoc.body.appendChild(ownerDoc.importNode(c, true))
-				);
+				for (let i = 0; i < doc.body.children.length; ++i) {
+					let c = doc.body.children[i];
+					ownerDoc.body.appendChild(ownerDoc.importNode(c, true))
+					yield true;
+				}
 			}
+
 			if (ownerDoc.defaultView) {
 				let levt = ownerDoc.createEvent("Events");
 				levt.initEvent("DOMContentLoaded", true, true);
@@ -485,6 +502,8 @@ Repaginator.prototype = {
 				levt.initEvent("load", true, true);
 				ownerDoc.defaultView.dispatchEvent(levt);
 			}
+			yield true;
+
 			var savedQuery;
 			if (this.attemptToIncrement) {
 				let newQuery = this.incrementQuery();
@@ -551,7 +570,8 @@ Repaginator.prototype = {
 
 		// kill the frame again
 		if (element && element.parentNode) {
-			setTimeout(function() element.parentNode.removeChild(element), 0);
+			yield true;
+			element.parentNode.removeChild(element);
 		}
 	}
 };
@@ -921,6 +941,7 @@ const {
 	function startup(data) AddonManager.getAddonByID(
 		data.id,
 		function(addon) {
+			importModule(addon.getResourceURI("cothread.jsm"));
 			initStringBundle(addon);
 			loadXUL(PACKAGE + ".xul", main, addon);
 		}

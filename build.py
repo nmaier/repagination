@@ -4,7 +4,7 @@ from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
 
 resources = [
     "*.xul",
-    "*.js",
+    "*.js", "*.jsm",
     "locale/*/repagination.properties",
     "icon*.png",
     "install.rdf",

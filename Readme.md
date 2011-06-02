@@ -9,5 +9,4 @@ Features
 ===
 
 * Restartless under Firefox 4
-* Installable under Firefox 3.6
 * All, limited and slideshow

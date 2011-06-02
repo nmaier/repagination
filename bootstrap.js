@@ -39,15 +39,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 const PACKAGE = "repagination";
-
-const EXPORTED_SYMBOLS = ['main'];
+const LOCALES = ['en-US', 'de'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const reportError = Cu.reportError;
-
-const global = this;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -270,6 +267,7 @@ function main(window) {
 function Repaginator(focusElement, count) {
 	this.pageLimit = count || 0;
 	this.init(focusElement);
+	this.buildQuery();
 }
 Repaginator.prototype = {
 	slideshow: false,
@@ -279,8 +277,6 @@ Repaginator.prototype = {
 	attemptToIncrement: true,
 
 	init: function(focusElement) {
-		this.query = "";
-
 		// find the anchor
 		(function findAnchor() {
 			for (let parent = focusElement; parent; parent = parent.parentNode) {
@@ -293,15 +289,20 @@ Repaginator.prototype = {
 			throw new Error("No focus element");
 		})();
 
-		var doc = focusElement.ownerDocument;
-		this._window = doc.defaultView;
+		this._queryElement = focusElement;
+		this._window = this._queryElement.ownerDocument.defaultView;
+	},
+	buildQuery: function() {
+		this.query = "";
+
+		var element = this._queryElement;
 
 		// find an id in the ancestor chain, or alternatively a class
 		// Note: cannot use id() xpath function here, as repagination might
 		// create multiple ids
 		(function findPathPrefix() {
 			let pieces = [];
-			for (let parent = focusElement.parentNode; parent; parent = parent.parentNode) {
+			for (let parent = element.parentNode; parent; parent = parent.parentNode) {
 				if (parent.id) {
 					pieces.unshift("//" + parent.localName + "[@id='" + parent.id +"']");
 					break;
@@ -315,8 +316,8 @@ Repaginator.prototype = {
 
 		// find the a-element to look up
 		(function findExpression(){
-			let range = doc.createRange();
-			range.selectNode(focusElement);
+			let range = element.ownerDocument.createRange();
+			range.selectNode(element);
 			let text = range.toString();
 
 			// First, see if the anchor has a text we can use
@@ -327,7 +328,7 @@ Repaginator.prototype = {
 			}
 
 			// Second, see if it has a child with a @src we may use
-			let srcElement = getFirstSnapshot(doc, focusElement, 'child::*[@src]');
+			let srcElement = getFirstSnapshot(element.ownerDocument, element, 'child::*[@src]');
 			if (srcElement) {
 				let src = srcElement.getAttribute('src') || "";
 				if (src.trim()) {
@@ -339,7 +340,7 @@ Repaginator.prototype = {
 			}
 
 			// Third, see if there is a child with a @value we may use
-			let valElement = getFirstSnapshot(doc, focusElement, 'child::*[@value]');
+			let valElement = getFirstSnapshot(element.ownerDocument, element, 'child::*[@value]');
 			if (valElement) {
 				let val = valElement.getAttribute('value') || "";
 				if (val.trim()) {
@@ -389,7 +390,6 @@ Repaginator.prototype = {
 		this.setTitle();
 
 		try {
-			//reportError(this.query);
 			let node = this._window.document.evaluate(
 				this.query,
 				this._window.document,
@@ -474,7 +474,6 @@ Repaginator.prototype = {
 				}
 			}
 
-			//reportError(this.query);
 			node = doc.evaluate(
 				this.query,
 				doc,
@@ -523,7 +522,6 @@ Repaginator.prototype = {
 			});
 		}
 		catch (ex) {
-			//reportError(ex);
 			this.restoreTitle();
 			ownerDoc.body.removeAttribute('repagination');
 		}
@@ -539,6 +537,7 @@ function Slideshow(focusElement, seconds) {
 	this.seconds = seconds || 0;
 	this.slideshow = true;
 	this.init(focusElement);
+	this.buildQuery();
 }
 Slideshow.prototype = {
 	__proto__: Repaginator.prototype
@@ -566,329 +565,305 @@ const {
 	startup: startup,
 	shutdown: shutdown,
 	addUnloader: addUnloader
-} = (function() {
-	try {
-		Cu.import("resource://gre/modules/AddonManager.jsm");
-		Cu.import("resource://gre/modules/Services.jsm");
+} = (function(self) {
+	Cu.import("resource://gre/modules/AddonManager.jsm");
+	Cu.import("resource://gre/modules/Services.jsm");
 
-		if (!('XMLHttpRequest' in this)) {
-			this.XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
-		}
+	if (!('XMLHttpRequest' in this)) {
+		this.XMLHttpRequest = Components.Constructor("@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+	}
 
-		/**
-		 * Apply a callback to each open and new browser windows.
-		 *
-		 * @usage watchWindows(callback): Apply a callback to each browser window.
-		 * @param [function] callback: 1-parameter function that gets a browser window.
-		 */
-		function watchWindows(callback) {
-			// Wrap the callback in a function that ignores failures
-			function watcher(window) {
-				try {
-					callback(window);
-				}
-				catch(ex) {}
-			}
-
-			// Wait for the window to finish loading before running the callback
-			function runOnLoad(window) {
-				// Listen for one load event before checking the window type
-				window.addEventListener("load", function() {
-					window.removeEventListener("load", arguments.callee, false);
-
-					// Now that the window has loaded, only handle browser windows
-					let doc = window.document.documentElement;
-					if (doc.getAttribute("windowtype") == "navigator:browser")
-						watcher(window);
-				}, false);
-			}
-
-			// Add functionality to existing windows
-			let browserWindows = Services.wm.getEnumerator("navigator:browser");
-			while (browserWindows.hasMoreElements()) {
-				// Only run the watcher immediately if the browser is completely loaded
-				let browserWindow = browserWindows.getNext();
-				if (browserWindow.document.readyState == "complete")
-					watcher(browserWindow);
-				// Wait for the window to load before continuing
-				else
-					runOnLoad(browserWindow);
-			}
-
-			// Watch for new browser windows opening then wait for it to load
-			function windowWatcher(subject, topic) {
-				if (topic == "domwindowopened")
-					runOnLoad(subject);
-			}
-			Services.ww.registerNotification(windowWatcher);
-
-			// Make sure to stop watching for windows if we're unloading
-			addUnloader(function() Services.ww.unregisterNotification(windowWatcher));
-		}
-
-		/**
-		 * Setup a window according to some XUL and call the next in chain.
-		 * Aka. poor man's loadOverlay
-		 *
-		 * @author Nils Maier
-		 * @param [object] xul: object-dict containing the target-id/Element
-		 * @param [function] next: next function to run
-		 * @param [window] window to set up
-		 */
-		function setupWindow(xul, next, window) {
+	/**
+	 * Apply a callback to each open and new browser windows.
+	 *
+	 * @usage watchWindows(callback): Apply a callback to each browser window.
+	 * @param [function] callback: 1-parameter function that gets a browser window.
+	 */
+	function watchWindows(callback) {
+		// Wrap the callback in a function that ignores failures
+		function watcher(window) {
 			try {
-				if (!xul) {
-					reportError("No XUL for some reason");
-					return;
-				}
-				// shortcut
-				let document = window.document;
-
-				// Santa's little helpers
-				function $(id) document.getElementById(id);
-				function $$(q) document.querySelector(q);
-
-				// loadOverlay for the poor
-				function addNode(target, node) {
-					// bring the node to be inserted into the document
-					let nn = document.importNode(node, true);
-
-					// helper: insert according to position
-					function insertX(attr, callback) {
-						if (!nn.hasAttribute(attr)) {
-							return false;
-						}
-						let places = nn.getAttribute(attr)
-							.split(',')
-							.map(function(p) p.trim())
-							.filter(function(p) !!p);
-						for each (let p in places) {
-							let pn = $$('#' + target.id + ' > #' + p);
-							if (!pn) {
-								continue;
-							}
-							callback(pn);
-							return true;
-						}
-						return false;
-					}
-
-					// try to insert according to insertafter/before
-					if (insertX('insertafter', function(pn) pn.parentNode.insertBefore(nn, pn.nextSibling))
-						|| insertX('insertbefore', function(pn) pn.parentNode.insertBefore(nn, pn))) {
-						return nn;
-					}
-					// just append
-					target.appendChild(nn);
-					return nn;
-				}
-
-				// store unloaders for all elements inserted
-				let unloaders = [];
-
-				// Add all overlays
-				for (let id in xul) {
-					let target = $(id);
-					if (!target) {
-						reportError("no target for " + id + ", not inserting");
-						continue;
-					}
-
-					// insert all children
-					for (let n = xul[id].firstChild; n; n = n.nextSibling) {
-						if (n.nodeType != n.ELEMENT_NODE) {
-							continue;
-						}
-						let nn = addNode(target, n);
-						unloaders.push(function() nn.parentNode.removeChild(nn));
-					}
-				}
-
-				// install per-window unloader
-				if (unloaders.length) {
-					addWindowUnloader(window, function() unloaders.forEach(function(u) u()));
-				}
-
-				// run next
-				next && next(window);
+				callback(window);
 			}
-			catch (ex) {
-				reportError(ex);
-			}
+			catch(ex) {}
 		}
 
-		/**
-		 * Loads some XUL and pushes it to watchWindows(setupWindow(next))
-		 *
-		 * @author Nils Maier
-		 * @param [string] file: XUL file to load
-		 * @param [function] next: function to call from watchWindows
-		 * @param [Addon] addon: AddonManger info about the addon to load the XUL from
-		 */
-		function loadXUL(file, next, addon) {
-			try {
-				let xulUrl = addon.getResourceURI(file).spec;
-				let xulReq = new XMLHttpRequest();
-				xulReq.onload = function() {
-					let document = xulReq.responseXML;
-					let root = document.documentElement;
+		// Wait for the window to finish loading before running the callback
+		function runOnLoad(window) {
+			// Listen for one load event before checking the window type
+			window.addEventListener("load", function() {
+				window.removeEventListener("load", arguments.callee, false);
 
-					function xpath() {
-						let rv = [];
-						for (let i = 0; i < arguments.length; ++i) {
-							let nodeSet = document.evaluate(arguments[i], document, null, 7, null);
-							for (let j = 0; j < nodeSet.snapshotLength; ++j) {
-								rv.push(nodeSet.snapshotItem(j));
-							}
-						}
-						return rv;
-					}
-					// clean empty textnodes
-					xpath("//text()[normalize-space(.) = '']")
-						.forEach(function(n) n.parentNode.removeChild(n));
-
-					let xul = {};
-					for (let i = root.firstChild; i; i = i.nextSibling) {
-						if (i.nodeType != i.ELEMENT_NODE || !i.hasAttribute('id')) {
-							continue;
-						}
-						let id = i.getAttribute('id');
-						xul[id] = i;
-					}
-					watchWindows(setupWindow.bind(null, xul, next));
-				};
-				xulReq.overrideMimeType('application/xml');
-				xulReq.open('GET', xulUrl);
-				xulReq.send();
-			}
-			catch (ex) {
-				reportError(ex);
-			}
+				// Now that the window has loaded, only handle browser windows
+				let doc = window.document.documentElement;
+				if (doc.getAttribute("windowtype") == "navigator:browser")
+					watcher(window);
+			}, false);
 		}
 
-		/**
-		 * Loads the string bundle for PACKAGE according to user locale
-		 * and chrome.manifest. The bundle is assigned to global.strings
-		 *
-		 * @author Nils Maier
-		 * @param [Addon] addon: Addon data from AddonManager
-		 * @param [function] next: Next function to call
-		 */
-		function initStringBundle(addon, next) {
-			let cm = new XMLHttpRequest();
-			cm.onload = function() {
-				// get supported locales
-				cm = cm.responseText
-					.split(/\n/g)
-					.filter(function(line) /^locale/.test(line))
-					.map(function(line) line.split(/\s/g)[2]);
-
-				// get selected locale
-				let xr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
-				let locale = xr.getSelectedLocale('global');
-
-				// exact match?
-				let idx = cm.indexOf(locale);
-				if (idx < 0) {
-					// best match?
-					idx = cm.map(function(l) l.split("-")[0]).indexOf(locale.split("-")[0]);
-				}
-
-				// load the string bundle
-				let sb = addon.getResourceURI(
-					'locale/'
-					+ cm[Math.max(0, idx)]
-					+ '/' + PACKAGE + '.properties').spec;
-				strings = StringBundleService.createBundle(sb);
-
-				// call next
-				next && next();
-			};
-			cm.overrideMimeType('text/plain');
-			cm.open('GET', addon.getResourceURI('chrome.manifest').spec);
-			cm.send();
+		// Add functionality to existing windows
+		let browserWindows = Services.wm.getEnumerator("navigator:browser");
+		while (browserWindows.hasMoreElements()) {
+			// Only run the watcher immediately if the browser is completely loaded
+			let browserWindow = browserWindows.getNext();
+			if (browserWindow.document.readyState == "complete")
+				watcher(browserWindow);
+			// Wait for the window to load before continuing
+			else
+				runOnLoad(browserWindow);
 		}
 
-
-		/**
-		 * Add an unloader
-		 *
-		 * @author Nils Maier
-		 * @param [function] callback: unload function to be called
-		 * @return [function] unloader: Can be called at any time to run and remove the unloader
-		 */
-		function addUnloader(callback) {
-			shutdown.unloaders.push(callback);
-			return function() {
-				try {
-					callback();
-				}
-				catch (ex) {}
-				shutdown.unloaders = shutdown.unloaders.filter(function(c) c != callback);
-			};
+		// Watch for new browser windows opening then wait for it to load
+		function windowWatcher(subject, topic) {
+			if (topic == "domwindowopened")
+				runOnLoad(subject);
 		}
+		Services.ww.registerNotification(windowWatcher);
 
-		// Addon manager post-install entry
-		function install() {
-			StringBundleService.flushBundles();
-		}
+		// Make sure to stop watching for windows if we're unloading
+		addUnloader(function() Services.ww.unregisterNotification(windowWatcher));
+	}
 
-		// Addon manager pre-uninstall entry
-		function uninstall(){}
-
-		// Addon manager shutdown entry
-		function shutdown(data, reason) {
-			if (reason === APP_SHUTDOWN) {
-				// No need to cleanup; stuff will vanish anyway
+	/**
+	 * Setup a window according to some XUL and call the next in chain.
+	 * Aka. poor man's loadOverlay
+	 *
+	 * @author Nils Maier
+	 * @param [object] xul: object-dict containing the target-id/Element
+	 * @param [function] next: next function to run
+	 * @param [window] window to set up
+	 */
+	function setupWindow(xul, next, window) {
+		try {
+			if (!xul) {
+				reportError("No XUL for some reason");
 				return;
 			}
-			for (let u = shutdown.unloaders.pop(); u; u = shutdown.unloaders.pop()) {
-				try {
-					u();
+			// shortcut
+			let document = window.document;
+
+			// Santa's little helpers
+			function $(id) document.getElementById(id);
+			function $$(q) document.querySelector(q);
+
+			// loadOverlay for the poor
+			function addNode(target, node) {
+				// bring the node to be inserted into the document
+				let nn = document.importNode(node, true);
+
+				// helper: insert according to position
+				function insertX(attr, callback) {
+					if (!nn.hasAttribute(attr)) {
+						return false;
+					}
+					let places = nn.getAttribute(attr)
+						.split(',')
+						.map(function(p) p.trim())
+						.filter(function(p) !!p);
+					for each (let p in places) {
+						let pn = $$('#' + target.id + ' > #' + p);
+						if (!pn) {
+							continue;
+						}
+						callback(pn);
+						return true;
+					}
+					return false;
 				}
-				catch (ex) {
-					reportError("Unloader threw" + u.toSource());
+
+				// try to insert according to insertafter/before
+				if (insertX('insertafter', function(pn) pn.parentNode.insertBefore(nn, pn.nextSibling))
+					|| insertX('insertbefore', function(pn) pn.parentNode.insertBefore(nn, pn))) {
+					return nn;
+				}
+				// just append
+				target.appendChild(nn);
+				return nn;
+			}
+
+			// store unloaders for all elements inserted
+			let unloaders = [];
+
+			// Add all overlays
+			for (let id in xul) {
+				let target = $(id);
+				if (!target) {
+					reportError("no target for " + id + ", not inserting");
+					continue;
+				}
+
+				// insert all children
+				for (let n = xul[id].firstChild; n; n = n.nextSibling) {
+					if (n.nodeType != n.ELEMENT_NODE) {
+						continue;
+					}
+					let nn = addNode(target, n);
+					unloaders.push(function() nn.parentNode.removeChild(nn));
 				}
 			}
+
+			// install per-window unloader
+			if (unloaders.length) {
+				addWindowUnloader(window, function() unloaders.forEach(function(u) u()));
+			}
+
+			// run next
+			next && next(window);
 		}
-		shutdown.unloaders = [];
-
-		// Addon manager startup entry
-		function startup(data) AddonManager.getAddonByID(
-			data.id,
-			function(addon) initStringBundle(
-				addon,
-				loadXUL.bind(null, PACKAGE + ".xul", main, addon)
-			)
-		);
-
-		return {
-			install: install,
-			uninstall: uninstall,
-			startup: startup,
-			shutdown: shutdown,
-			addUnloader: addUnloader
-			};
+		catch (ex) {
+			reportError(ex);
+		}
 	}
-	catch (ex) {
-		// pre-moz2
-		// return stubs
-		strings = StringBundleService.createBundle(
-			"chrome://"
-			+ PACKAGE
-			+ "/locale/"
-			+ PACKAGE
-			+ ".properties");
-		return {
-			install: null,
-			uninstall: null,
-			startup: null,
-			shutdown: null,
-			addUnloader: function(u) {
-				return function() { u(); };
+
+	/**
+	 * Loads some XUL and pushes it to watchWindows(setupWindow(next))
+	 *
+	 * @author Nils Maier
+	 * @param [string] file: XUL file to load
+	 * @param [function] next: function to call from watchWindows
+	 * @param [Addon] addon: AddonManger info about the addon to load the XUL from
+	 */
+	function loadXUL(file, next, addon) {
+		try {
+			let xulUrl = addon.getResourceURI(file).spec;
+			let xulReq = new XMLHttpRequest();
+			xulReq.onload = function() {
+				let document = xulReq.responseXML;
+				let root = document.documentElement;
+
+				function xpath() {
+					let rv = [];
+					for (let i = 0; i < arguments.length; ++i) {
+						let nodeSet = document.evaluate(arguments[i], document, null, 7, null);
+						for (let j = 0; j < nodeSet.snapshotLength; ++j) {
+							rv.push(nodeSet.snapshotItem(j));
+						}
+					}
+					return rv;
+				}
+				// clean empty textnodes
+				xpath("//text()[normalize-space(.) = '']")
+					.forEach(function(n) n.parentNode.removeChild(n));
+
+				let xul = {};
+				for (let i = root.firstChild; i; i = i.nextSibling) {
+					if (i.nodeType != i.ELEMENT_NODE || !i.hasAttribute('id')) {
+						continue;
+					}
+					let id = i.getAttribute('id');
+					xul[id] = i;
+				}
+				watchWindows(setupWindow.bind(null, xul, next));
+			};
+			xulReq.overrideMimeType('application/xml');
+			xulReq.open('GET', xulUrl);
+			xulReq.send();
+		}
+		catch (ex) {
+			reportError(ex);
+		}
+	}
+
+	/**
+	 * Loads the string bundle for PACKAGE according to user locale
+	 * and chrome.manifest. The bundle is assigned to global.strings
+	 *
+	 * @author Nils Maier
+	 * @param [Addon] addon: Addon data from AddonManager
+	 * @param [function] next: Next function to call
+	 */
+	function initStringBundle(addon) {
+		// get selected locale
+		let xr = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
+		let locale = xr.getSelectedLocale('global');
+
+		// exact match?
+		let idx = LOCALES.indexOf(locale);
+		if (idx < 0) {
+			// best match?
+			idx = LOCALES.map(function(l) l.split("-")[0]).indexOf(locale.split("-")[0]);
+		}
+
+		// load the string bundle
+		let sb = addon.getResourceURI(
+			'locale/'
+			+ LOCALES[Math.max(0, idx)]
+			+ '/' + PACKAGE + '.properties').spec;
+		strings = StringBundleService.createBundle(sb);
+	}
+
+
+	/**
+	 * Add an unloader
+	 *
+	 * @author Nils Maier
+	 * @param [function] callback: unload function to be called
+	 * @return [function] unloader: Can be called at any time to run and remove the unloader
+	 */
+	function addUnloader(callback) {
+		shutdown.unloaders.push(callback);
+		return function() {
+			try {
+				callback();
 			}
+			catch (ex) {}
+			shutdown.unloaders = shutdown.unloaders.filter(function(c) c != callback);
 		};
 	}
-})();
+
+	// Addon manager post-install entry
+	function install() {
+		StringBundleService.flushBundles();
+	}
+
+	// Addon manager pre-uninstall entry
+	function uninstall(){}
+
+	// Addon manager shutdown entry
+	function shutdown(data, reason) {
+		if (reason === APP_SHUTDOWN) {
+			// No need to cleanup; stuff will vanish anyway
+			return;
+		}
+		for (let u = shutdown.unloaders.pop(); u; u = shutdown.unloaders.pop()) {
+			try {
+				u();
+			}
+			catch (ex) {
+				reportError("Unloader threw" + u.toSource());
+			}
+		}
+	}
+	shutdown.unloaders = [];
+
+	const importModule = (function() {
+		const scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+			.getService(Ci.mozIJSSubScriptLoader);
+		return function importModule(uri) {
+			let ctx = {};
+			scriptLoader.loadSubScript(uri.spec, ctx);
+			for each (let sym in ctx.EXPORTED_SYMBOLS) {
+				self[sym] = ctx[sym];
+			}
+		};
+	})();
+
+	// Addon manager startup entry
+	function startup(data) AddonManager.getAddonByID(
+		data.id,
+		function(addon) {
+			initStringBundle(addon);
+			loadXUL(PACKAGE + ".xul", main, addon);
+		}
+	);
+
+	return {
+		install: install,
+		uninstall: uninstall,
+		startup: startup,
+		shutdown: shutdown,
+		addUnloader: addUnloader
+		};
+})(this);
 
 /* vim: set noet ts=2 sw=2 : */

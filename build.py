@@ -7,7 +7,7 @@ resources = [
     "*.js",
     "locale/*/repagination.properties",
     "icon*.png",
-    "install.rdf", "chrome.manifest",
+    "install.rdf",
     "COPYING"
     ]
 destination = "repagination.xpi"

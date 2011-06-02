@@ -161,11 +161,14 @@ function main(window) {
 	function $(id) document.getElementById(id);
 	function __r(node) __(node) + Array.forEach(node.getElementsByTagName("*"), __);
 
-
 	function repaginate(num, slideshow) {
 		let focusElement = document.commandDispatcher.focusedElement;
 		let ctor = slideshow ? Slideshow : Repaginator;
 		new ctor(focusElement, num).repaginate();
+	}
+	function repaginate_domain() {
+		let focusElement = document.commandDispatcher.focusedElement;
+		new DomainRepaginator(window, focusElement).repaginate();
 	}
 	function stop() {
 		if (!window.gContextMenu || !window.gContextMenu.target) {
@@ -217,6 +220,7 @@ function main(window) {
 		}
 	}
 	function onAll() repaginate();
+	function onAllDomain() repaginate_domain();
 	function onStop() stop();
 	function onLimitCommand(event) {
 		let t = event.target;
@@ -237,12 +241,14 @@ function main(window) {
 	__r(menu);
 	let contextMenu = $('contentAreaContextMenu');
 	let allMenu = $('repagination_flatten_nolimit');
+	let allDomainMenu = $('repagination_flatten_nolimit_domain');
 	let stopMenu = $('repagination_stop');
 	let limitMenu = $('repagination_flat_limit_menu');
 	let slideMenu = $('repagination_flat_nolimit_slide');
 
 	contextMenu.addEventListener('popupshowing', onContextMenu, false);
 	allMenu.addEventListener('command', onAll, true);
+	allDomainMenu.addEventListener('command', onAllDomain, true);
 	stopMenu.addEventListener('command', onStop, true);
 	limitMenu.addEventListener('command', onLimitCommand, true);
 	slideMenu.addEventListener('command', onSlideCommand, true);
@@ -252,6 +258,8 @@ function main(window) {
 		contextMenu = null;
 		allMenu.removeEventListener('command', onAll, true);
 		allMenu = null;
+		allDomainMenu.removeEventListener('command', onAllDomain, true);
+		allDomainMenu = null;
 		stopMenu.removeEventListener('command', onStop, true);
 		stopMenu = null;
 		limitMenu.removeEventListener('command', onLimitCommand, true);
@@ -531,6 +539,52 @@ Repaginator.prototype = {
 			setTimeout(function() element.parentNode.removeChild(element), 0);
 		}
 	}
+};
+
+function DomainRepaginator(window, focusElement) {
+	this.init(focusElement);
+	this.buildQuery();
+
+	this._internalPaginators = [];
+	let host = this._window.location.hostname;
+	for (let i = 0; i < window.gBrowser.browsers.length; ++i) {
+		try {
+			let b = window.gBrowser.getBrowserAtIndex(i);
+			if (b.currentURI.host != host) {
+				continue;
+			}
+			let document = b.contentDocument;
+			let node = document.evaluate(
+				this.query,
+				document,
+				null,
+				9,
+				null
+				).singleNodeValue;
+			if (!node) {
+				continue;
+			}
+			this._internalPaginators.push(new DomainRepaginator.InternalRepaginator(node, this.query));
+		}
+		catch (ex) {
+			reportError(ex);
+		}
+	}
+}
+DomainRepaginator.prototype = {
+	__proto__: Repaginator.prototype,
+	repaginate: function() {
+		for each (let ip in this._internalPaginators) {
+			ip.repaginate();
+		}
+	}
+}
+DomainRepaginator.InternalRepaginator = function(focusElement, query) {
+	this.init(focusElement);
+	this.query = query;
+};
+DomainRepaginator.InternalRepaginator.prototype = {
+	__proto__: Repaginator.prototype
 };
 
 function Slideshow(focusElement, seconds) {

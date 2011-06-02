@@ -452,6 +452,21 @@ Repaginator.prototype = {
 				function(s) s.parentNode.removeChild(s)
 			);
 
+			// Remove non-same-origin iframes
+			// Otherwise we might create a shitload of (nearly) identical frames
+			// and (almost) kill the browser
+			if (!this.pageLimit || this.pageLimit > 20) {
+				let host = ownerDoc.defaultView.location.hostname;
+				Array.forEach(
+						doc.querySelectorAll('iframe'),
+						function(f) {
+							if (f.contentWindow.location.hostname != host) {
+								f.parentNode.removeChild(f)
+							}
+						}
+				);
+			}
+
 			if (this.slideshow) {
 				ownerDoc.body.innerHTML = doc.body.innerHTML;
 				ownerDoc.body.setAttribute('repagination', 'true');

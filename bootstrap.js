@@ -56,6 +56,16 @@ XPCOMUtils.defineLazyServiceGetter(
 	"StringBundleService",
 	"@mozilla.org/intl/stringbundle;1",
 	"nsIStringBundleService");
+XPCOMUtils.defineLazyServiceGetter(
+	this,
+	"io",
+	"@mozilla.org/network/io-service;1",
+	"nsIIOService");
+XPCOMUtils.defineLazyServiceGetter(
+	this,
+	"etld",
+	"@mozilla.org/network/effective-tld-service;1",
+	"nsIEffectiveTLDService");
 
 // must receive the string bundle
 let strings = null;
@@ -115,7 +125,22 @@ function getFirstSnapshot(doc, node, query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
 
+function checkSameOrigin(a, b) {
+	try {
+		let [ua, ub] = [io.newURI(a, null, null), io.newURI(b, null, null)];
+		let [oa, ob] = [etld.getBaseDomain(ua), etld.getBaseDomain(ub)];
+		return ua.scheme == ub.scheme && oa == ob;
+	}
+	catch (ex) {
+		reportError(ex);
+		return false;
+	}
+}
+
 function createFrame(window, src, loadFun) {
+	if (!checkSameOrigin(window.location, src)) {
+		throw new Error("same origin mismatch");
+	}
 	let frame = window.document.createElement('iframe');
 	frame.style.display = 'none';
 	window.document.body.appendChild(frame);
@@ -194,7 +219,10 @@ function main(window) {
 		}
 		if (window.gContextMenu.onLink
 			&& /^https?:/.test(document.commandDispatcher.focusedElement.href)) {
-			setMenuHidden(false);
+			setMenuHidden(!checkSameOrigin(
+				document.commandDispatcher.focusedElement.href,
+				document.commandDispatcher.focusedElement.ownerDocument.defaultView.location
+				));
 			try {
 				if (!window.gContextMenu.target.ownerDocument.body
 					.hasAttribute('repagination')) {
@@ -433,6 +461,9 @@ Repaginator.prototype = {
 			}
 
 			var doc = element.contentDocument;
+			if (!checkSameOrigin(doc.defaultView.location, ownerDoc.defaultView.location)) {
+				throw new Error("Not in the same origin anymore!");
+			}
 			this.pageCount++;
 
 			// remove futher scripts
@@ -516,7 +547,7 @@ Repaginator.prototype = {
 			});
 		}
 		catch (ex) {
-			//reportError(ex);
+			reportError(ex);
 			this.restoreTitle();
 			ownerDoc.body.removeAttribute('repagination');
 		}

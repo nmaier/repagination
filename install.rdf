@@ -3,7 +3,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>{6072cb90-a0bd-11da-a746-0800200c9a66}</em:id>
 		<em:name>Re-Pagination</em:name>
-		<em:version>2011.03.24</em:version>
+		<em:version>2012.01.03</em:version>
 
 		<em:bootstrap>true</em:bootstrap>
 		<em:type>2</em:type>
@@ -17,14 +17,14 @@
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 				<em:minVersion>3.6</em:minVersion>
-				<em:maxVersion>4.0.*</em:maxVersion>
+				<em:maxVersion>11.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		<em:targetApplication>
 			<Description>
 				<em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
 				<em:minVersion>2.1b1</em:minVersion>
-				<em:maxVersion>2.1b3</em:maxVersion>
+				<em:maxVersion>2.7.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 	</Description>

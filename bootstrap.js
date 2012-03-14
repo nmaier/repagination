@@ -61,11 +61,6 @@ XPCOMUtils.defineLazyServiceGetter(
 	"io",
 	"@mozilla.org/network/io-service;1",
 	"nsIIOService");
-XPCOMUtils.defineLazyServiceGetter(
-	this,
-	"etld",
-	"@mozilla.org/network/effective-tld-service;1",
-	"nsIEffectiveTLDService");
 
 // must receive the string bundle
 let strings = null;
@@ -125,20 +120,26 @@ function getFirstSnapshot(doc, node, query) doc
 	.evaluate(query, node, null, 7, null)
 	.snapshotItem(0);
 
-function checkSameOrigin(a, b) {
+function checkSameOrigin(node, tryLoadUri) {
 	try {
-		let [ua, ub] = [io.newURI(a, null, null), io.newURI(b, null, null)];
-		let [oa, ob] = [etld.getBaseDomain(ua), etld.getBaseDomain(ub)];
-		return ua.scheme == ub.scheme && oa == ob;
+		if (!(tryLoadUri instanceof Ci.nsIURI)) {
+			tryLoadUri = io.newURI(tryLoadUri, null, null);
+		}
+		// data: URIs are exempt from same-origin checks
+		if (tryLoadUri.schemeIs("data")) {
+			return true;
+		}
+		node.nodePrincipal.checkMayLoad(tryLoadUri, false);
+		return true;
 	}
 	catch (ex) {
-		reportError(ex);
+		//reportError("denied load of [" + (tryLoadUri.spec || tryLoadUri) + "]: " + ex);
 		return false;
 	}
 }
 
 function createFrame(window, src, loadFun) {
-	if (!checkSameOrigin(window.location, src)) {
+	if (!checkSameOrigin(window.document, src)) {
 		throw new Error("same origin mismatch");
 	}
 	let frame = window.document.createElement('iframe');
@@ -220,8 +221,8 @@ function main(window) {
 		if (window.gContextMenu.onLink
 			&& /^https?:/.test(document.commandDispatcher.focusedElement.href)) {
 			setMenuHidden(!checkSameOrigin(
-				document.commandDispatcher.focusedElement.href,
-				document.commandDispatcher.focusedElement.ownerDocument.defaultView.location
+				document.commandDispatcher.focusedElement.ownerDocument,
+				document.commandDispatcher.focusedElement.href
 				));
 			try {
 				if (!window.gContextMenu.target.ownerDocument.body
@@ -472,7 +473,7 @@ Repaginator.prototype = {
 			}
 
 			var doc = element.contentDocument;
-			if (!checkSameOrigin(doc.defaultView.location, ownerDoc.defaultView.location)) {
+			if (!checkSameOrigin(ownerDoc, doc.defaultView.location)) {
 				throw new Error("Not in the same origin anymore!");
 			}
 			this.pageCount++;

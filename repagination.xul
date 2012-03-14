@@ -13,7 +13,6 @@
 		<menu label="repagination" insertbefore="context-sep-open" id="repagination_menu">
 			<menupopup>
 				<menuitem id="repagination_flatten_nolimit" label="loadall" />
-				<menuitem id="repagination_flatten_nolimit_domain" label="loadall.domain" />
 				<menu id="repagination_flat_limit_menu" label="limited">
 					<menupopup>
 						<menuitem label="limited.pages(2)" value="2" />

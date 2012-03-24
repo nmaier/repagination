@@ -388,6 +388,17 @@ Repaginator.prototype = {
 				}
 			}
 
+			if (focusElement.id) {
+				this.query += "//a[@id='" + focusElement.id + "']";
+				this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
+				return;
+			}
+
+			if (focusElement.className) {
+				this.query += "//a[@class='" + focusElement.className + "']";
+				this.numberToken = /(\[@class='.*?)(\d+)(.*?'\])/;
+				return;
+			}
 			// Nothing else we might try
 			throw new Error("Repagination: no anchor expression found!");
 		}).call(this);

@@ -548,7 +548,7 @@ Repaginator.prototype = {
 				}
 			}
 
-			node = doc.evaluate(
+			let node = doc.evaluate(
 				this.query,
 				doc,
 				null,

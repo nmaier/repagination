@@ -499,8 +499,7 @@ Repaginator.prototype = {
 				}
 			}
 
-			//reportError(this.query);
-			node = doc.evaluate(
+			let node = doc.evaluate(
 				this.query,
 				doc,
 				null,

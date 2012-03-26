@@ -1,2 +1,3 @@
 content repagination ./
-locale repagination en-US ./en-US
+
+locale repagination en-US en-US/

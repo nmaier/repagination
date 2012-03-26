@@ -103,7 +103,7 @@ function require(module) {
 
   // try to load the module
   log(LOG_DEBUG, "going to load: " + module);
-  let scope = Object.create(null);
+  let scope = {};
   for (let i = EXPORTED_SYMBOLS.length; ~(--i);) {
     let sym = EXPORTED_SYMBOLS[i];
     if (sym[0] == "_") {

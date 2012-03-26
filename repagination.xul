@@ -1,48 +1,40 @@
 <?xml version="1.0"?>
+<!DOCTYPE overlay SYSTEM "chrome://repagination/locale/">
 <overlay id="repagination" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<script type="application/x-javascript"><![CDATA[
-    // loader stub for pre-moz-2.0
-		addEventListener('load', function() {
-			removeEventListener('load', arguments.callee, true);
-			let _m = {};
-			Components.utils.import("resource://repagination/bootstrap.js", _m);
-			_m.main(window);
-		}, true);
-	]]></script>
 	<popup id="contentAreaContextMenu">
-		<menu label="repagination" insertbefore="context-sep-open" id="repagination_menu">
+		<menu label="&menu.label;" insertbefore="context-sep-open" id="repagination_menu">
 			<menupopup>
-				<menuitem id="repagination_flatten_nolimit" label="loadall" />
-				<menuitem id="repagination_flatten_nolimit_domain" label="loadall.domain" />
-				<menu id="repagination_flat_limit_menu" label="limited">
+				<menuitem id="repagination_flatten_nolimit" label="&loadall.label;" />
+				<menuitem id="repagination_flatten_nolimit_domain" label="&loadall.domain.label;" />
+				<menu id="repagination_flat_limit_menu" label="&limited.label;">
 					<menupopup>
-						<menuitem label="limited.pages(2)" value="2" />
-						<menuitem label="limited.pages(5)" value="5" />
-						<menuitem label="limited.pages(10)" value="10" />
-						<menuitem label="limited.pages(15)" value="15" />
-						<menuitem label="limited.pages(20)" value="20" />
-						<menuitem label="limited.pages(25)" value="25" />
-						<menuitem label="limited.pages(30)" value="30" />
-						<menuitem label="limited.pages(40)" value="40" />
-						<menuitem label="limited.pages(50)" value="50"/>
-						<menuitem label="limited.pages(100)" value="100" />
+						<menuitem value="2" />
+						<menuitem value="5" />
+						<menuitem value="10" />
+						<menuitem value="15" />
+						<menuitem value="20" />
+						<menuitem value="25" />
+						<menuitem value="30" />
+						<menuitem value="40" />
+						<menuitem value="50"/>
+						<menuitem value="100" />
 					</menupopup>
 				</menu>
-				<menu id="repagination_flat_nolimit_slide" label="slideshow">
+				<menu id="repagination_flat_nolimit_slide" label="&slideshow.label;">
 					<menupopup>
-						<menuitem label="slideshow.immediately" value="0" />
-						<menuitem label="slideshow.second" value="1" />
-						<menuitem label="slideshow.seconds(2)" value="2" />
-						<menuitem label="slideshow.seconds(4)" value="4" />
-						<menuitem label="slideshow.seconds(5)" value="5" />
-						<menuitem label="slideshow.seconds(10)" value="10" />
-						<menuitem label="slideshow.seconds(15)" value="15" />
-						<menuitem label="slideshow.seconds(30)" value="30" />
-						<menuitem label="slideshow.minute" value="60" />
-						<menuitem label="slideshow.minutes(2)" value="120" />
+						<menuitem label="&slideshow.immediately.label;" value="0" />
+						<menuitem label="&slideshow.onesecond.label;" value="1" />
+						<menuitem value="2" />
+						<menuitem value="4" />
+						<menuitem value="5" />
+						<menuitem value="10" />
+						<menuitem value="15" />
+						<menuitem value="30" />
+						<menuitem label="&slideshow.oneminute.label;" value="60" />
+						<menuitem value="120" />
 					</menupopup>
 				</menu>
-				<menuitem id="repagination_stop" label="stop" />
+				<menuitem id="repagination_stop" label="&stop.label;" />
 			</menupopup>
 		</menu>
 	</popup>

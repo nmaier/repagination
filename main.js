@@ -118,65 +118,71 @@ Repaginator.prototype = {
   buildQuery: function R_buildQuery(el) {
     this.query = "";
 
-    // Find an id in the ancestor chain, or alternatively a class
-    // that we may operate on
     // Note: cannot use the id() xpath function here, as there might
     // be duplicate ids
-    (function findPathPrefix() {
-      let pieces = [];
-      for (let parent = el.parentNode; parent; parent = parent.parentNode) {
-        if (parent.id) {
-          log(LOG_DEBUG, "got id: " + parent.id);
-          pieces.unshift("//" + parent.localName + "[@id='" + parent.id + "']");
-          break; // one id is enough
+    if (el.id) {
+      this.query = "//a[@id='" + el.id + "']"; 
+      this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
+    }
+    else {
+      // Find an id in the ancestor chain, or alternatively a class
+      // that we may operate on
+      (function findPathPrefix() {
+        let pieces = [];
+        for (let parent = el.parentNode; parent; parent = parent.parentNode) {
+          if (parent.id) {
+            log(LOG_DEBUG, "got id: " + parent.id);
+            pieces.unshift("//" + parent.localName + "[@id='" + parent.id + "']");
+            break; // one id is enough
+          }
+          if (parent.className) {
+            log(LOG_DEBUG, "got class: " + parent.className);
+            pieces.unshift("//" + parent.localName + "[@class='" + parent.className + "']");
+          }
         }
-        if (parent.className) {
-          log(LOG_DEBUG, "got class: " + parent.className);
-          pieces.unshift("//" + parent.localName + "[@class='" + parent.className + "']");
-        }
-      }
-      this.query = pieces.join("");
-      log(LOG_DEBUG, "findPathPrefix result: " + this.query);
-    }).call(this);
+        this.query = pieces.join("");
+        log(LOG_DEBUG, "findPathPrefix result: " + this.query);
+      }).call(this);
 
-    // find the anchor
-    (function findAnchor() {
-      let text = el.textContent;
+      // find the anchor
+      (function findAnchor() {
+        let text = el.textContent;
 
-      // First: try the node text
-      if (text.trim()) {
-        this.query += "//a[.='" + text + "']";
-        this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
-        log(LOG_DEBUG, "using text");
-        return;
-      }
-
-      // Second: see if it has a child with a @src we may use
-      let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@src]");
-      if (srcEl) {
-        let src = srcEl.getAttribute("src") || "";
-        if (src.trim()) {
-          this.query += "//" + srcEl.localName + "[@src='" + src + "‘]/ancestor::a";
-          this.numberToken = /(\[@src='.*?)(\d+)(.*?'\])/;
-          log(LOG_DEBUG, "using @src");
+        // First: try the node text
+        if (text.trim()) {
+          this.query += "//a[.='" + text + "']";
+          this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
+          log(LOG_DEBUG, "using text");
           return;
         }
-      }
 
-      // Third: See if there is a child with a @value we may use
-      let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
-      if (srcEl) {
-        let val = srcEl.getAttribute("value") || "";
-        if (val.trim()) {
-          this.query += "//" + srcEl.localName + "[@value='" + val + "‘]/ancestor::a";
-          this.numberToken = /(\[@value='.*?)(\d+)(.*?'\])/;
-          log(LOG_DEBUG, "using @value");
-          return;
+        // Second: see if it has a child with a @src we may use
+        let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@src]");
+        if (srcEl) {
+          let src = srcEl.getAttribute("src") || "";
+          if (src.trim()) {
+            this.query += "//" + srcEl.localName + "[@src='" + src + "‘]/ancestor::a";
+            this.numberToken = /(\[@src='.*?)(\d+)(.*?'\])/;
+            log(LOG_DEBUG, "using @src");
+            return;
+          }
         }
-      }
 
-      throw new Error("No anchor expression found!");
-    }).call(this);
+        // Third: See if there is a child with a @value we may use
+        let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
+        if (srcEl) {
+          let val = srcEl.getAttribute("value") || "";
+          if (val.trim()) {
+            this.query += "//" + srcEl.localName + "[@value='" + val + "‘]/ancestor::a";
+            this.numberToken = /(\[@value='.*?)(\d+)(.*?'\])/;
+            log(LOG_DEBUG, "using @value");
+            return;
+          }
+        }
+
+        throw new Error("No anchor expression found!");
+      }).call(this);
+    }
 
 
     // We're after the last result

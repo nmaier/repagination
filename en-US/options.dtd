@@ -1,3 +1,4 @@
+<!ENTITY showalldomain.label "Show 'All tabs for current domain' menu item">
 <!ENTITY loglevel.label "Log level">
 <!ENTITY loglevel.desc "The messages will be logged to the Error Console. You should leave this at No Logging unless instructed otherwise">
 <!ENTITY loglevel.none.label "No Logging">

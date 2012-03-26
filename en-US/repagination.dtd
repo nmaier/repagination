@@ -1,6 +1,6 @@
 <!ENTITY menu.label "Re-Pagination">
 <!ENTITY loadall.label "Load all">
-<!ENTITY loadall.domain.label "Load all (all tabs for current domain)">
+<!ENTITY loadall.domain.label "All tabs for current domain">
 <!ENTITY limited.label "Limited">
 <!ENTITY slideshow.label "Slideshow">
 <!ENTITY slideshow.immediately.label "Immediately">

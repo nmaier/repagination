@@ -505,40 +505,6 @@ registerOverlay(
       }
     }
 
-    function onContextMenu() {
-      function setMenuHidden(hidden) {
-        log(LOG_DEBUG, "set menu hidden = " + hidden);
-        for (let n = menu.menupopup.firstChild; n; n = n.nextSibling) {
-          n.hidden = hidden;
-        }
-        menu.hidden = hidden;
-      }
-
-      log(LOG_DEBUG, "context menu showing!");
-      try {
-        if (window.gContextMenu.onLink
-          && /^https?:/.test(fe().href)) {
-          setMenuHidden(!checkSameOrigin(fe().ownerDocument, fe().href));
-          if (!window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
-            stopMenu.hidden = true;
-          }
-          return;
-        }
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed to setup menu (onLink)", ex);
-      }
-      try {
-        setMenuHidden(true);
-        if (window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
-          menu.hidden = stopMenu.hidden = false;
-        }
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed to setup menu (plain)", ex);
-      }
-    }
-
     function onAll() repaginate();
     function onAllDomain() repaginate_domain();
     function onStop() stop();
@@ -580,6 +546,41 @@ registerOverlay(
     let stopMenu = $("repagination_stop");
     let limitMenu = $("repagination_flat_limit_menu");
     let slideMenu = $("repagination_flat_nolimit_slide");
+
+    let onContextMenu = function onContextMenu() {
+      function setMenuHidden(hidden) {
+        log(LOG_DEBUG, "set menu hidden = " + hidden);
+        for (let n = menu.menupopup.firstChild; n; n = n.nextSibling) {
+          n.hidden = hidden;
+        }
+        allDomainMenu.hidden = allDomainMenu.hidden || !prefs.showalldomain;
+        menu.hidden = hidden;
+      }
+
+      log(LOG_DEBUG, "context menu showing!");
+      try {
+        if (window.gContextMenu.onLink
+          && /^https?:/.test(fe().href)) {
+          setMenuHidden(!checkSameOrigin(fe().ownerDocument, fe().href));
+          if (!window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
+            stopMenu.hidden = true;
+          }
+          return;
+        }
+      }
+      catch (ex) {
+        log(LOG_ERROR, "failed to setup menu (onLink)", ex);
+      }
+      try {
+        setMenuHidden(true);
+        if (window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
+          menu.hidden = stopMenu.hidden = false;
+        }
+      }
+      catch (ex) {
+        log(LOG_ERROR, "failed to setup menu (plain)", ex);
+      }
+    }
 
     contextMenu.addEventListener("popupshowing", onContextMenu, true);
     allMenu.addEventListener("command", onAll, true);

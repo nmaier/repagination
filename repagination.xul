@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE overlay SYSTEM "chrome://repagination/locale/">
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <overlay id="repagination" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<popup id="contentAreaContextMenu">
 		<menu label="&menu.label;" insertbefore="context-sep-open" id="repagination_menu">

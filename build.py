@@ -13,7 +13,7 @@ resources = [
     "*/*.properties",
     "defaults/preferences/prefs.js",
     "icon*.png",
-    "COPYING"
+    "LICENSE"
     ]
 destination = "repagination.xpi"
 

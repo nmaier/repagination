@@ -8,6 +8,9 @@
 		<em:bootstrap>true</em:bootstrap>
 		<em:type>2</em:type>
 
+    <em:optionsURL>chrome://repagination/content/options.xul</em:optionsURL>
+    <em:optionsType>2</em:optionsType>
+
 		<em:description>Load all consecutive pages in a single tab at once.</em:description>
 		<em:creator>Nils Maier</em:creator>
 		<em:developer>Nils Maier</em:developer>

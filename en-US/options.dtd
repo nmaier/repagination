@@ -1,0 +1,6 @@
+<!ENTITY loglevel.label "Log level">
+<!ENTITY loglevel.desc "The messages will be logged to the Error Console. You should leave this at No Logging unless instructed otherwise">
+<!ENTITY loglevel.none.label "No Logging">
+<!ENTITY loglevel.error.label "Log Errors">
+<!ENTITY loglevel.info.label "Log Errors and Infos">
+<!ENTITY loglevel.debug.label "Log Everything!">

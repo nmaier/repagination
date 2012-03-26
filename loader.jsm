@@ -41,6 +41,7 @@ function itor(name, cls, iface, init) {
 
 itor("XHR", "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
 itor("ScriptError", "@mozilla.org/scripterror;1", "nsIScriptError", "init");
+itor("Timer", "@mozilla.org/timer;1", "nsITimer", "init");
 
 const {SELF_PATH, BASE_PATH} = (function() {
   let rv;

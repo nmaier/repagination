@@ -116,12 +116,14 @@ Repaginator.prototype = {
     this._window = weak(focusElement.ownerDocument.defaultView);
   },
   buildQuery: function R_buildQuery(el) {
+    function escapeXStr(str) str.replace(/'/g, "\\'");
+
     this.query = "";
 
     // Note: cannot use the id() xpath function here, as there might
     // be duplicate ids
     if (el.id) {
-      this.query = "//a[@id='" + el.id + "']"; 
+      this.query = "//a[@id='" + escapeXStr(el.id) + "']"; 
       this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
     }
     else {
@@ -132,12 +134,12 @@ Repaginator.prototype = {
         for (let parent = el.parentNode; parent; parent = parent.parentNode) {
           if (parent.id) {
             log(LOG_DEBUG, "got id: " + parent.id);
-            pieces.unshift("//" + parent.localName + "[@id='" + parent.id + "']");
+            pieces.unshift("//" + parent.localName + "[@id='" + escapeXStr(parent.id) + "']");
             break; // one id is enough
           }
           if (parent.className) {
             log(LOG_DEBUG, "got class: " + parent.className);
-            pieces.unshift("//" + parent.localName + "[@class='" + parent.className + "']");
+            pieces.unshift("//" + parent.localName + "[@class='" + escapeXStr(parent.className) + "']");
           }
         }
         this.query = pieces.join("");
@@ -150,7 +152,7 @@ Repaginator.prototype = {
 
         // First: try the node text
         if (text.trim()) {
-          this.query += "//a[.='" + text + "']";
+          this.query += "//a[.='" + escapeXStr(text) + "']";
           this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
           log(LOG_DEBUG, "using text");
           return;
@@ -161,7 +163,7 @@ Repaginator.prototype = {
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
           if (src.trim()) {
-            this.query += "//" + srcEl.localName + "[@src='" + src + "‘]/ancestor::a";
+            this.query += "//" + srcEl.localName + "[@src='" + escapeXStr(src) + "‘]/ancestor::a";
             this.numberToken = /(\[@src='.*?)(\d+)(.*?'\])/;
             log(LOG_DEBUG, "using @src");
             return;
@@ -173,7 +175,7 @@ Repaginator.prototype = {
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
           if (val.trim()) {
-            this.query += "//" + srcEl.localName + "[@value='" + val + "‘]/ancestor::a";
+            this.query += "//" + srcEl.localName + "[@value='" + escapeXStr(val) + "‘]/ancestor::a";
             this.numberToken = /(\[@value='.*?)(\d+)(.*?'\])/;
             log(LOG_DEBUG, "using @value");
             return;

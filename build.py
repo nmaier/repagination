@@ -1,13 +1,18 @@
+# vim: set nosmartindent et ts=4 sw=4 :
+
 import os, sys, re
 from glob import glob
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
 
 resources = [
+    "install.rdf",
+    "chrome.manifest",
     "*.xul",
     "*.js", "*.jsm",
-    "locale/*/repagination.properties",
+    "*/*.dtd",
+    "*/*.properties",
+    "defaults/preferences/prefs.js",
     "icon*.png",
-    "install.rdf",
     "COPYING"
     ]
 destination = "repagination.xpi"

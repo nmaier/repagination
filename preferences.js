@@ -64,7 +64,7 @@ function Branch(branch) {
   this.has = function(pref) getType(pref) != INVALID;
   this.isChanged = function(pref) branch.prefHasUserValue(pref);
   this.isDefault = function(pref) !this.isChanged();
-  this.get = function(pref, defaultValue) {
+  let get = this.get = function(pref, defaultValue) {
     switch (getType(pref)) {
       case STR:
         return branch.getComplexValue(pref, Ci.nsISupportsString).data;
@@ -119,6 +119,16 @@ function Branch(branch) {
   };
   this.delete = function(pref) {
     branch.clearUserPref(pref);
+  };
+  this.observe = function(pref, callback) {
+    let obs = {
+      observe: function(s,t,d) {
+        callback(pref, get(pref));
+       }
+    };
+    branch.addObserver(pref, obs, false);
+    unload(function() branch.removeObserver(pref, obs));
+    obs.observe();
   };
 }
 

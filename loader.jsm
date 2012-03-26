@@ -153,7 +153,7 @@ function _setupLoader(data, callback) AddonManager.getAddonByID(data.id, functio
     global.globalPrefs = prefs.globalPrefs;
 
     try {
-      logging.setLogLevel(prefs.prefs.loglevel);
+      prefs.prefs.observe("loglevel", function(p,v) logging.setLogLevel(v));
     }
     catch (ex) {
       log(LOG_ERROR, "failed to set log level", ex);

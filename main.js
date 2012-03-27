@@ -3,6 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const {registerOverlay, unloadWindow} = require("windows");
+const cothreads = lazyRequire("cothreads", "CoThreadInterleaved");
+
 // l10n
 XPCOMUtils.defineLazyGetter(this, "strings", (function() 
   Services.strings.createBundle("chrome://repagination/locale/repagination.properties")));
@@ -246,8 +249,7 @@ Repaginator.prototype = {
     ),
   loadNext: function R_loadNext(element) {
     try {
-      const {CoThreadInterleaved} = require("cothreads");
-      new CoThreadInterleaved(this._loadNext_gen.bind(this, element)(), 1).start();
+      new cothreads.CoThreadInterleaved(this._loadNext_gen.bind(this, element)(), 1).start();
     }
     catch (ex) {
       log(LOG_ERROR, "failed to launch loadNext CoThread", ex);
@@ -460,7 +462,6 @@ function Slideshow(focusElement, seconds) {
 }
 Slideshow.prototype = Repaginator.prototype;
 
-const {registerOverlay, unloadWindow} = require("windows");
 registerOverlay(
   "repagination.xul",
   "chrome://browser/content/browser.xul",

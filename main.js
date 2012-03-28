@@ -5,8 +5,7 @@
 
 const {registerOverlay, unloadWindow} = require("windows");
 const cothreads = lazyRequire("cothreads", "CoThreadInterleaved");
-
-Instances.register("Timer", "@mozilla.org/timer;1", "nsITimer", "init");
+const timers = lazyRequire("timers", "createTimeout", "destroy");
 
 // l10n
 lazy(this, "strings", (function()
@@ -377,18 +376,8 @@ Repaginator.prototype = {
         }
         if (self.slideshow && self.seconds) {
           log(LOG_INFO, "slideshow; delay: " + self.seconds * 1000);
-          self.timer = new Instances.Timer({
-            observe: function() {
-              log(LOG_DEBUG, "timer fired!");
-              try {
-                self.loadNext(frame);
-              }
-              catch (ex) {
-                log(LOG_ERROR, "timer died a horrible death", ex);
-              }
-              delete self.timer;
-            }
-          }, self.seconds * 1000, 0);
+          let timer = timers.createTimeout(function() self.loadNext(frame), self.seconds * 1000);
+          unloadWindow(ownerDoc.defaultView, function() timers.destroy(timer));
         }
         else {
           log(LOG_INFO, "regular; no-delay");

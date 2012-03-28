@@ -55,8 +55,9 @@ Object.defineProperties(exports, {
   LOG_INFO: {value: 1, enumerable: true},
   LOG_ERROR: {value: 2, enumerable: true},
   LOG_NONE: {value: 0x7FFFFFFF},
-  setLogLevel: {value: function(l) global.level = l},
-  setLogPrefix: {value: function(p) global.prefix = p}
+  PREFIX: {get: function() prefix},
+  init: {value: function(p) global.prefix = p, configurable: true},
+  setLogLevel: {value: function(l) global.level = l}
 });
 
 var prefix = "";

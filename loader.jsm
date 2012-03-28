@@ -166,7 +166,8 @@ const lazy = XPCOMUtils.defineLazyGetter;
         for (let [k,v] in Iterator(logging)) {
           exports[k] = v;
         }
-        logging.setLogPrefix(addon.name);
+        logging.init(addon.name);
+        delete logging.init;
 
         let prefs = require("preferences");
         prefs.init(addon.id);

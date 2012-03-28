@@ -19,27 +19,32 @@ const {
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+const lazy = XPCOMUtils.defineLazyGetter;
+
 // hide our internals
 // Since require() uses .scriptloader, the loaded require scopes will have
 // access to the named stuff within this module scope, but we actually want
 // them to have access to certain stuff.
 (function setup_scope(exports) {
-  function itor(obj, name, cls, iface, init) {
-    if (init) {
-      XPCOMUtils.defineLazyGetter(obj, name, function() ctor(cls, iface, init));
-      XPCOMUtils.defineLazyGetter(obj, "Plain" + name, function() ctor(cls, iface));
-    }
-    else {
-      XPCOMUtils.defineLazyGetter(obj, name, function() ctor(cls, iface));
-      XPCOMUtils.defineLazyGetter(obj, name.toLowerCase(), function() new this[name]());
-    }
-  }
- 
   exports.Services = Object.create(Services);
-  const Instances = exports.Instances = {};
-  itor(Instances, "XHR", "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
-  itor(Instances, "ScriptError", "@mozilla.org/scripterror;1", "nsIScriptError", "init");
-  itor(Instances, "Timer", "@mozilla.org/timer;1", "nsITimer", "init");
+  const Instances = exports.Instances = {
+    get: function I_get(symbol, contract, iface, initializer) {
+      if (!(symbol in this)) {
+        this.register(symbol, contract, iface, initializer);
+      }
+      return this[symbol];
+    },
+    register: function I_register(symbol, contract, iface, initializer) {
+      if (initializer) {
+        lazy(this, symbol, function() ctor(contract, iface, initializer));
+        lazy(this, symbol + "_p", function() ctor(contract, iface));
+      }
+      else {
+        lazy(this, symbol, function() ctor(contract, iface));
+        lazy(this, symbol.toLowerCase(), function() new (ctor(contract, iface))());
+      }
+    }
+  };
 
   const {SELF_PATH, BASE_PATH} = (function() {
     let rv;
@@ -135,7 +140,7 @@ Cu.import("resource://gre/modules/Services.jsm");
     let binder = lazyBind.bind(rv, props);
     for (let [,p] in Iterator(props)) {
       let _p = p;
-      XPCOMUtils.defineLazyGetter(rv, _p, function() binder(_p));
+      lazy(rv, _p, function() binder(_p));
     }
     return rv;
   }

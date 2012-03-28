@@ -6,8 +6,10 @@
 const {registerOverlay, unloadWindow} = require("windows");
 const cothreads = lazyRequire("cothreads", "CoThreadInterleaved");
 
+Instances.register("Timer", "@mozilla.org/timer;1", "nsITimer", "init");
+
 // l10n
-XPCOMUtils.defineLazyGetter(this, "strings", (function() 
+lazy(this, "strings", (function()
   Services.strings.createBundle("chrome://repagination/locale/repagination.properties")));
 function _(id) {
   let args = Array.slice(arguments, 1);

@@ -5,6 +5,8 @@
 
 const global = this;
 
+Instances.register("ScriptError", "@mozilla.org/scripterror;1", "nsIScriptError", "init");
+
 var UNKNOWN_STACK = {
   stackMsg: "",
   sourceName: "unknown",

@@ -5,6 +5,8 @@
 
 const global = this;
 
+Instances.register("XHR", "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttpRequest");
+
 /**
  * Specialized unloader that will trigger whenever either the window gets
  * unloaded or the add-on is shut down

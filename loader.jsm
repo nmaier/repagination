@@ -135,7 +135,7 @@ const lazy = XPCOMUtils.defineLazyGetter;
       let m = require(module);
       for (let [,p] in Iterator(props)) {
         delete this[p];
-        this[prop] = m[p];
+        this[p] = m[p];
       }
       return this[prop];
     }

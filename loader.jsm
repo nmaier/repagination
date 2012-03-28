@@ -170,6 +170,7 @@ const lazy = XPCOMUtils.defineLazyGetter;
 
         let prefs = require("preferences");
         prefs.init(addon.id);
+        delete prefs.init;
         exports.prefs = prefs.prefs;
         exports.globalPrefs = prefs.globalPrefs;
 

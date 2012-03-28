@@ -152,7 +152,7 @@ function init(id) {
 }
 
 Object.defineProperties(exports, {
-  init: {value: init},
+  init: {value: init, configurable: true},
   prefs: {get: function() prefs, enumerable: true},
   globalPrefs: {value: globalPrefs, enumerable: true}
 });

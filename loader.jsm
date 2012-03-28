@@ -26,7 +26,18 @@ const lazy = XPCOMUtils.defineLazyGetter;
 // access to the named stuff within this module scope, but we actually want
 // them to have access to certain stuff.
 (function setup_scope(exports) {
-  exports.Services = Object.create(Services);
+  Services = exports.Services = Object.create(Services);
+  let dlsg = XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils, Services);
+  dlsg("catman", "@mozilla.org/categorymanager;1", "nsICategoryManager");
+  dlsg("clipbrd", "@mozilla.org/widget/clipboard;1", "nsIClipboard");
+  dlsg("drags", "@mozilla.org/widget/dragservice;1", "nsIDragService");
+  dlsg("eps", "@mozilla.org/uriloader/external-protocol-service;1", "nsIExternalProtocolService");
+  dlsg("fixups", "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
+  dlsg("memrm", "@mozilla.org/memory-reporter-manager;1", "nsIMemoryReporterManager");
+  dlsg("mime", "@mozilla.org/uriloader/external-helper-app-service;1", "nsIMIMEService");
+  dlsg("mimeheader", "@mozilla.org/network/mime-hdrparam;1", "nsIMIMEHeaderParam");
+  dlsg("uuid", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+  
   const Instances = exports.Instances = {
     get: function I_get(symbol, contract, iface, initializer) {
       if (!(symbol in this)) {

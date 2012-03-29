@@ -132,10 +132,7 @@ function Branch(branch) {
   };
 }
 
-var prefs;
-var globalPrefs = createProxy(new Branch(""));
-
-function setDefaultPrefs() {
+(function setDefaultPrefs() {
   let branch = new Branch(Services.prefs.getDefaultBranch(""));
   let scope = {pref: function(key, val) branch.set(key, val)};
   try {
@@ -145,14 +142,12 @@ function setDefaultPrefs() {
   catch (ex) {
     log(LOG_ERROR, "failed to setup default preferences", ex);
   }
-}
-function init(id) {
-  setDefaultPrefs();
-  global.prefs = globalPrefs.extensions[id];
-}
+})();
+
+var globalPrefs = createProxy(new Branch(""));
+var prefs = globalPrefs.extensions[ADDON.id];
 
 Object.defineProperties(exports, {
-  init: {value: init, configurable: true},
   prefs: {get: function() prefs, enumerable: true},
   globalPrefs: {value: globalPrefs, enumerable: true}
 });

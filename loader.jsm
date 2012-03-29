@@ -176,18 +176,17 @@ const lazy = XPCOMUtils.defineLazyGetter;
     let _am = {};
     Cu.import("resource://gre/modules/AddonManager.jsm", _am);
     _am.AddonManager.getAddonByID(data.id, function loader_startup(addon) {
+      exports.ADDON = addon;
+      unload(function() delete exports.ADDON);
+
       let logging;
       try {
         logging = require("logging");
         for (let [k,v] in Iterator(logging)) {
           exports[k] = v;
         }
-        logging.init(addon.name);
-        delete logging.init;
 
         let prefs = require("preferences");
-        prefs.init(addon.id);
-        delete prefs.init;
         exports.prefs = prefs.prefs;
         exports.globalPrefs = prefs.globalPrefs;
 

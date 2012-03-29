@@ -56,11 +56,10 @@ Object.defineProperties(exports, {
   LOG_ERROR: {value: 2, enumerable: true},
   LOG_NONE: {value: 0x7FFFFFFF},
   PREFIX: {get: function() prefix},
-  init: {value: function(p) global.prefix = p, configurable: true},
   setLogLevel: {value: function(l) global.level = l}
 });
 
-var prefix = "";
+var prefix = ADDON.name;
 var level = exports.LOG_NONE;
 
 exports.log = function(level, message, exception) {

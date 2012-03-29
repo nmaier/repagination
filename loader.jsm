@@ -46,6 +46,11 @@ const lazy = XPCOMUtils.defineLazyGetter;
       return this[symbol];
     },
     register: function I_register(symbol, contract, iface, initializer) {
+      if (symbol in this) {
+        let msg = "Symbol " + symbol + " already in Instances";
+        log(LOG_ERROR, msg);
+        throw new Error(msg);
+      }
       if (initializer) {
         lazy(this, symbol, function() ctor(contract, iface, initializer));
         lazy(this, symbol + "_p", function() ctor(contract, iface));

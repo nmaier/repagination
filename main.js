@@ -249,11 +249,21 @@ Repaginator.prototype = {
     function(g, pre, num, post) pre + (parseInt(num, 100) + 1) + post
     ),
   loadNext: function R_loadNext(element) {
-    try {
-      new cothreads.CoThreadInterleaved(this._loadNext_gen.bind(this, element)(), 1).start();
+    if (prefs.yielding) {
+      try {
+        new cothreads.CoThreadInterleaved(this._loadNext_gen.bind(this, element)(), 1).start();
+      }
+      catch (ex) {
+        log(LOG_ERROR, "failed to launch loadNext CoThread", ex);
+      }
     }
-    catch (ex) {
-      log(LOG_ERROR, "failed to launch loadNext CoThread", ex);
+    else {
+      try {
+        for(let f in this._loadNext_gen.bind(this, element)());
+      }
+      catch (ex) {
+        log(LOG_ERROR, "failed to process loadNext (non-yielding)", ex);
+      }
     }
   },
   _loadNext_gen: function R__loadNext_gen(element) {

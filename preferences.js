@@ -73,7 +73,7 @@ function Branch(branch) {
       case BOOL:
         return branch.getBoolPref(pref);
       default:
-        if (defaultValue) {
+        if (typeof(defaultValue) != "undefined") {
           return defaultValue;
         }
         log(LOG_DEBUG, "creating subbranch for " + branch.root + pref);
@@ -120,10 +120,10 @@ function Branch(branch) {
   this.delete = function(pref) {
     branch.clearUserPref(pref);
   };
-  this.observe = function(pref, callback) {
+  this.observe = function(pref, callback, defaultValue) {
     let obs = {
       observe: function(s,t,d) {
-        callback(pref, get(pref));
+        callback(pref, get(pref, defaultValue));
        }
     };
     branch.addObserver(pref, obs, false);

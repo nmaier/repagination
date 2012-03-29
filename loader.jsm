@@ -191,7 +191,9 @@ const lazy = XPCOMUtils.defineLazyGetter;
         exports.globalPrefs = prefs.globalPrefs;
 
         try {
-          prefs.prefs.observe("loglevel", function(p,v) logging.setLogLevel(v));
+          prefs.prefs.observe("loglevel", 
+            function(p,v) logging.setLogLevel(v),
+            logging.LOG_NONE);
         }
         catch (ex) {
           logging.log(logging.LOG_ERROR, "failed to set log level", ex);

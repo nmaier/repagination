@@ -12,7 +12,7 @@ resources = [
     "*/*.dtd",
     "*/*.properties",
     "defaults/preferences/prefs.js",
-    "icon*.png",
+    "icon.png", "icon64.png",
     "LICENSE"
     ]
 destination = "repagination.xpi"

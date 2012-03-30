@@ -4,41 +4,72 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <overlay id="repagination" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<popup id="contentAreaContextMenu">
-		<menu label="&menu.label;" insertbefore="context-sep-open" id="repagination_menu">
-			<menupopup>
-				<menuitem id="repagination_flatten_nolimit" label="&loadall.label;" />
-				<menuitem id="repagination_flatten_nolimit_domain" label="&loadall.domain.label;" />
-				<menu id="repagination_flat_limit_menu" label="&limited.label;">
-					<menupopup>
-						<menuitem value="2" />
-						<menuitem value="5" />
-						<menuitem value="10" />
-						<menuitem value="15" />
-						<menuitem value="20" />
-						<menuitem value="25" />
-						<menuitem value="30" />
-						<menuitem value="40" />
-						<menuitem value="50"/>
-						<menuitem value="100" />
-					</menupopup>
-				</menu>
-				<menu id="repagination_flat_nolimit_slide" label="&slideshow.label;">
-					<menupopup>
-						<menuitem label="&slideshow.immediately.label;" value="0" />
-						<menuitem label="&slideshow.onesecond.label;" value="1" />
-						<menuitem value="2" />
-						<menuitem value="4" />
-						<menuitem value="5" />
-						<menuitem value="10" />
-						<menuitem value="15" />
-						<menuitem value="30" />
-						<menuitem label="&slideshow.oneminute.label;" value="60" />
-						<menuitem value="120" />
-					</menupopup>
-				</menu>
-				<menuitem id="repagination_stop" label="&stop.label;" />
-			</menupopup>
-		</menu>
-	</popup>
+  <popup id="contentAreaContextMenu">
+    <menuitem id="repagination_nolimit" label="&menu.label; — &loadall.label;" insertbefore="context-sep-open" />
+    <menuitem id="repagination_nolimit_domain" label="&loadall.domain.label;" insertbefore="context-sep-open" />
+    <menu id="repagination_limit" label="&menu.label; — &limited.label;" insertbefore="context-sep-open">
+      <menupopup>
+        <menuitem value="2" />
+        <menuitem value="5" />
+        <menuitem value="10" />
+        <menuitem value="15" />
+        <menuitem value="20" />
+        <menuitem value="25" />
+        <menuitem value="30" />
+        <menuitem value="40" />
+        <menuitem value="50"/>
+        <menuitem value="100" />
+      </menupopup>
+    </menu>
+    <menu id="repagination_slide" label="&menu.label; — &slideshow.label;" insertbefore="context-sep-open">
+      <menupopup>
+        <menuitem label="&slideshow.immediately.label;" value="0" />
+        <menuitem label="&slideshow.onesecond.label;" value="1" />
+        <menuitem value="2" />
+        <menuitem value="4" />
+        <menuitem value="5" />
+        <menuitem value="10" />
+        <menuitem value="15" />
+        <menuitem value="30" />
+        <menuitem label="&slideshow.oneminute.label;" value="60" />
+        <menuitem value="120" />
+      </menupopup>
+    </menu>
+    <menuitem id="repagination_stop" label="&menu.label; — &stop.label;" insertbefore="context-sep-open"/>
+    <menu id="repagination_menu" label="&menu.label;" insertbefore="context-sep-open">
+      <menupopup>
+        <menuitem id="repagination_menu_nolimit" label="&loadall.label;" />
+        <menuitem id="repagination_menu_nolimit_domain" label="&loadall.domain.label;" />
+        <menu id="repagination_menu_limit" label="&limited.label;">
+          <menupopup>
+            <menuitem value="2" />
+            <menuitem value="5" />
+            <menuitem value="10" />
+            <menuitem value="15" />
+            <menuitem value="20" />
+            <menuitem value="25" />
+            <menuitem value="30" />
+            <menuitem value="40" />
+            <menuitem value="50"/>
+            <menuitem value="100" />
+          </menupopup>
+        </menu>
+        <menu id="repagination_menu_slide" label="&slideshow.label;">
+          <menupopup>
+            <menuitem label="&slideshow.immediately.label;" value="0" />
+            <menuitem label="&slideshow.onesecond.label;" value="1" />
+            <menuitem value="2" />
+            <menuitem value="4" />
+            <menuitem value="5" />
+            <menuitem value="10" />
+            <menuitem value="15" />
+            <menuitem value="30" />
+            <menuitem label="&slideshow.oneminute.label;" value="60" />
+            <menuitem value="120" />
+          </menupopup>
+        </menu>
+        <menuitem id="repagination_menu_stop" label="&stop.label;" />
+      </menupopup>
+    </menu>
+  </popup>
 </overlay>

@@ -1,0 +1,9 @@
+<!ENTITY menu.label "Re-Pagination">
+<!ENTITY loadall.label "Alle laden">
+<!ENTITY loadall.domain.label "'Alle Tabs der aktuellen Domain'">
+<!ENTITY limited.label "Begrenzt">
+<!ENTITY slideshow.label "Slide-Show">
+<!ENTITY slideshow.immediately.label "Sofort">
+<!ENTITY slideshow.onesecond.label "1 Sekunde">
+<!ENTITY slideshow.oneminute.label "1 Minute">
+<!ENTITY stop.label "Stoppen!">

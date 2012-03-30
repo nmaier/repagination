@@ -128,7 +128,14 @@ function checkSameOrigin(node, tryLoadUri) {
 		if (tryLoadUri.schemeIs("data")) {
 			return true;
 		}
-		node.nodePrincipal.checkMayLoad(tryLoadUri, false);
+		if (node.nodePrincipal.checkMayLoad) {
+			node.nodePrincipal.checkMayLoad(tryLoadUri, false);
+		}
+		else {
+			Cc["@mozilla.org/scriptsecuritymanager;1"]
+				.getService(Ci.nsIScriptSecurityManager)
+				.checkLoadURIWithPrincipal(node.nodePrincipal, tryLoadUri, 0);
+		}
 		return true;
 	}
 	catch (ex) {

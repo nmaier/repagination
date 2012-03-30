@@ -1,6 +1,6 @@
 <!ENTITY showalldomain.label "'Alle Tabs der aktuellen Domain' Menüeintrag anzeigen">
 <!ENTITY loglevel.label "Protokoll Stufe">
-<!ENTITY loglevel.desc "Die Nachrichten werden in der Fehlerkonsole protokolliert. Man sollte diese Einstellung auf Keine Protokollierung belassen, wenn nicht anders angewiesen.">
+<!ENTITY loglevel.desc "Die Nachrichten werden in der Fehlerkonsole protokolliert. Man sollte diese Einstellung auf 'Keine Protokollierung' belassen, wenn nicht anders angewiesen.">
 <!ENTITY loglevel.none.label "Keine Protokollierung">
 <!ENTITY loglevel.error.label "Fehler protokollieren">
 <!ENTITY loglevel.info.label "Fehler und Infos protokollieren">

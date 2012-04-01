@@ -12,7 +12,7 @@ var UNKNOWN_STACK = {
   sourceName: "unknown",
   sourceLine: "",
   lineNumber: 0,
-  columnNumber: 0,
+  columnNumber: 0
 };
 Object.freeze(UNKNOWN_STACK);
 

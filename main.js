@@ -616,7 +616,7 @@ registerOverlay(
     unloadWindow(window, function() {
       contextMenu.removeEventListener("popuphowing", onContextMenu, true);
       menuCascaded.allMenu.removeEventListener("command", onAll, true);
-      menuMplain.allMenu.removeEventListener("command", onAll, true);
+      menuPlain.allMenu.removeEventListener("command", onAll, true);
       menuCascaded.allDomainMenu.removeEventListener("command", onAllDomain, true);
       menuPlain.allDomainMenu.removeEventListener("command", onAllDomain, true);
       menuCascaded.stopMenu.removeEventListener("command", onStop, true);
@@ -625,7 +625,7 @@ registerOverlay(
       menuPlain.limitMenu.removeEventListener("command", onLimitCommand, true);
       menuCascaded.slideMenu.removeEventListener("command", onSlideCommand, true);
       menuPlain.slideMenu.removeEventListener("command", onSlideCommand, true);
-      menu = menuPlain = menuCascaded = null;
+      contextMenu = menuPlain = menuCascaded = null;
     });
     log(LOG_INFO, "all good!");
 });

@@ -5,7 +5,9 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <setting type="bool" pref="extensions.{6072cb90-a0bd-11da-a746-0800200c9a66}.submenu" title="&displaySubmenu.label;" desc="&displaySubmenu.desc;"/>
+  <setting type="bool" pref="extensions.{6072cb90-a0bd-11da-a746-0800200c9a66}.showslideshow" title="&showslideshow.label;" />
   <setting type="bool" pref="extensions.{6072cb90-a0bd-11da-a746-0800200c9a66}.showalldomain" title="&showalldomain.label;" />
+
   <setting type="menulist" pref="extensions.{6072cb90-a0bd-11da-a746-0800200c9a66}.loglevel" title="&loglevel.label;" desc="&loglevel.desc;">
     <menulist>
       <menupopup>

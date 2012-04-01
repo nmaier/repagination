@@ -574,6 +574,7 @@ registerOverlay(
         for each (let mi in menuCurrent) {
           mi.hidden = hidden;
         }
+        menuCurrent.slideMenu.hidden = menuCurrent.slideMenu.hidden || !prefs.showslideshow;
         menuCurrent.allDomainMenu.hidden = menuCurrent.allDomainMenu.hidden || !prefs.showalldomain;
       }
 

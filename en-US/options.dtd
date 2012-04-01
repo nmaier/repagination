@@ -1,5 +1,6 @@
 <!ENTITY displaySubmenu.label "Display submenu">
 <!ENTITY displaySubmenu.desc "When this option is enabled (default), then Re-Pagination will be displayed as a submenu instead of displaying the various actions directly within the context menu.">
+<!ENTITY showslideshow.label "Show 'Slideshow' menu item">
 <!ENTITY showalldomain.label "Show 'All tabs for current domain' menu item">
 <!ENTITY loglevel.label "Log level">
 <!ENTITY loglevel.desc "The messages will be logged to the Error Console. You should leave this at 'No Logging' unless instructed otherwise">

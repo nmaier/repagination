@@ -109,7 +109,7 @@ Repaginator.prototype = {
     // find anchor
     (function findInitialAnchor() {
       for (let parent = focusElement; parent; parent = parent.parentNode) {
-        if (parent.localName = "a") {
+        if (parent.localName == "a") {
           focusElement = parent;
           return;
         }

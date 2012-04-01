@@ -28,7 +28,7 @@ exports.unloadWindow = function unloadWindow(window, fn) {
 /**
  * Apply a callback to each open and new browser windows.
  */
-exports.watchWindows = function watchWindows(callback) {
+exports.watchWindows = function watchWindows(location, callback) {
   // Wrap the callback in a function that ignores failures
   function watcher(window) {
     log(LOG_DEBUG, "watchwindows watcher");
@@ -46,24 +46,33 @@ exports.watchWindows = function watchWindows(callback) {
     window.addEventListener("load", function runOnLoad_load() {
       window.removeEventListener("load", runOnLoad_load, false);
 
-      // Now that the window has loaded, only handle browser windows
-      let root = window.document.documentElement;
-      if (root.getAttribute("windowtype") == "navigator:browser") {
+      // Now that the window has loaded, only handle requested windows
+      if (window.location == location) {
         watcher(window);
+      }
+      else {
+        log(LOG_DEBUG, "skipping window: " + window.location + " as another location was requested: " + location);
       }
     }, false);
   }
 
   // Add functionality to existing windows
-  let browserWindows = Services.wm.getEnumerator("navigator:browser");
-  while (browserWindows.hasMoreElements()) {
+  let windows = Services.wm.getEnumerator(null);
+  while (windows.hasMoreElements()) {
     // Only run the watcher immediately if the browser is completely loaded
-    let browserWindow = browserWindows.getNext();
-    if (browserWindow.document.readyState == "complete")
-      watcher(browserWindow);
+    let window = windows.getNext();
+    if (window.document.readyState == "complete") {
+      if (window.location == location) {
+        watcher(window);
+      }
+      else {
+        log(LOG_DEBUG, "skipping early window: " + window.location + " as another location was requested: " + location);
+      }
+    }
     // Wait for the window to load before continuing
-    else
-      runOnLoad(browserWindow);
+    else {
+      runOnLoad(window);
+    }
   }
 
   // Watch for new browser windows opening then wait for it to load
@@ -119,12 +128,6 @@ exports.registerOverlay = function registerOverlay(src, location, callback) {
         target.appendChild(nn);
       }
       return nn;
-    }
-    log(LOG_DEBUG, "document is: " + document);
-
-    if (document.location != location) {
-      log(LOG_INFO, "not loading: " + src + " into: " + document.location + " expected: " + location);
-      return;
     }
     log(LOG_DEBUG, "gonna stuff: " + src + " into: " + location);
 
@@ -188,7 +191,7 @@ exports.registerOverlay = function registerOverlay(src, location, callback) {
       log(LOG_INFO, "There is only XUL ... but there wasn't");
       return;
     }
-    exports.watchWindows(inject.bind(null, xul));
+    exports.watchWindows(location, inject.bind(null, xul));
   };
   _r.onerror = _r.onabort = function() {
     log(LOG_ERROR, "Failed to load " + src);

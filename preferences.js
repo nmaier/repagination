@@ -57,6 +57,9 @@ function Branch(branch) {
       branch += ".";
     }
     branch = Services.prefs.getBranch(branch);
+    if ("nsIPrefBranch2" in Ci) {
+      branch.QueryInterface(Ci.nsIPrefBranch2);
+    }
   }
   this.branch = branch.root;
 

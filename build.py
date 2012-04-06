@@ -31,7 +31,7 @@ if os.path.exists(destination):
 
 class ZipOutFile(ZipFile):
     def __init__(self, zfile):
-        ZipFile.__init__(self, zfile, "w", ZIP_DEFLATED)
+        ZipFile.__init__(self, zfile, "w", ZIP_STORED)
     def __enter__(self):
         return self
     def __exit__(self, type, value, traceback):
@@ -39,7 +39,4 @@ class ZipOutFile(ZipFile):
 
 with ZipOutFile(destination) as zp:
     for f in sorted(get_files(resources), key=str.lower):
-        if f.endswith('.png'):
-            zp.write(f, compress_type=ZIP_STORED)
-        else:
-            zp.write(f)
+        zp.write(f)

@@ -1,4 +1,4 @@
 content repagination ./
 
-locale repagination en-US en-US/
-locale repagination de de/
+locale repagination en-US locale/en-US/
+locale repagination de locale/de/

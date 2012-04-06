@@ -9,8 +9,8 @@ resources = [
     "chrome.manifest",
     "*.xul",
     "*.js", "*.jsm",
-    "*/*.dtd",
-    "*/*.properties",
+    "locale/*/*.dtd",
+    "locale/*/*.properties",
     "defaults/preferences/prefs.js",
     "icon.png", "icon64.png",
     "LICENSE"

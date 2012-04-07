@@ -246,7 +246,7 @@ Repaginator.prototype = {
   },
   incrementQuery: function R_incrementQuery() this.query.replace(
     this.numberToken,
-    function(g, pre, num, post) pre + (parseInt(num, 100) + 1) + post
+    function(g, pre, num, post) pre + (parseInt(num, 10) + 1) + post
     ),
   loadNext: function R_loadNext(element) {
     if (prefs.yielding) {

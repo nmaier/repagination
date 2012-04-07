@@ -463,172 +463,179 @@ function Slideshow(focusElement, seconds) {
 }
 Slideshow.prototype = Repaginator.prototype;
 
-registerOverlay(
-  "repagination.xul",
-  "chrome://browser/content/browser.xul",
-  function main(window, document) {
-    function $(id) document.getElementById(id);
-    function $$(q) document.querySelector(q);
-    function $$$(q) document.querySelectorAll(q);
-    function fe() document.commandDispatcher.focusedElement;
+function main(window, document) {
+  function $(id) document.getElementById(id);
+  function $$(q) document.querySelector(q);
+  function $$$(q) document.querySelectorAll(q);
+  function fe() document.commandDispatcher.focusedElement;
 
-    function repaginate(num, slideshow) {
-      log(LOG_INFO, "repaginate: " + num + "/" + slideshow);
-      try {
-        let ctor = slideshow ? Slideshow : Repaginator;
-        new ctor(fe(), num).repaginate();
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed tu run repaginate", ex);
-      }
+  function repaginate(num, slideshow) {
+    log(LOG_INFO, "repaginate: " + num + "/" + slideshow);
+    try {
+      let ctor = slideshow ? Slideshow : Repaginator;
+      new ctor(fe(), num).repaginate();
     }
-    function repaginate_domain() {
-      log(LOG_INFO, "repaginate_domain");
-      try {
-        new DomainRepaginator(window, fe()).repaginate();
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed tu run repaginate_domain", ex);
-      }
+    catch (ex) {
+      log(LOG_ERROR, "failed tu run repaginate", ex);
     }
-    function stop() {
-      log(LOG_INFO, "stop");
-      if (!window.gContextMenu || !window.gContextMenu.focusedElement) {
-        let body = window.content.document.getElementsByTagName("body")[0];
-        if (body) {
-          body.removeAttribute("repagination");
-        }
-        return;
-      }
-
-      let body = window.gContextMenu.target.ownerDocument.getElementsByTagName("body")[0];
+  }
+  function repaginate_domain() {
+    log(LOG_INFO, "repaginate_domain");
+    try {
+      new DomainRepaginator(window, fe()).repaginate();
+    }
+    catch (ex) {
+      log(LOG_ERROR, "failed tu run repaginate_domain", ex);
+    }
+  }
+  function stop() {
+    log(LOG_INFO, "stop");
+    if (!window.gContextMenu || !window.gContextMenu.focusedElement) {
+      let body = window.content.document.getElementsByTagName("body")[0];
       if (body) {
         body.removeAttribute("repagination");
       }
+      return;
     }
 
-    function onAll() repaginate();
-    function onAllDomain() repaginate_domain();
-    function onStop() stop();
-    function onLimitCommand(evt) {
-      let t = evt.target;
-      if (t.localName != "menuitem") {
+    let body = window.gContextMenu.target.ownerDocument.getElementsByTagName("body")[0];
+    if (body) {
+      body.removeAttribute("repagination");
+    }
+  }
+
+  function onAll() repaginate();
+  function onAllDomain() repaginate_domain();
+  function onStop() stop();
+  function onLimitCommand(evt) {
+    let t = evt.target;
+    if (t.localName != "menuitem") {
+      return;
+    }
+    repaginate(parseInt(t.getAttribute("value"), 10));
+  }
+  function onSlideCommand(evt) {
+    let t = evt.target;
+    if (t.localName != "menuitem") {
+      return;
+    }
+    repaginate(parseInt(t.getAttribute("value"), 10), true);
+  }
+
+  log(LOG_INFO, "main called!");
+
+  // finish the localization
+  for (let [,n] in Iterator($$$(":-moz-any(#repagination_limit, #repagination_menu_limit) menuitem"))) {
+    n.setAttribute("label", _("pages.label", n.getAttribute("value")));
+  }
+  for (let [,n] in Iterator($$$(":-moz-any(#repagination_slide, #repagination_menu_slide) menuitem:not([label])"))) {
+    let s = parseInt(n.getAttribute("value"), 10);
+    if (s < 60) { 
+      n.setAttribute("label", _("seconds.label", s));
+    }
+    else {
+      n.setAttribute("label", _("minutes.label", parseInt(s / 60, 10)));
+    }
+  }
+  let contextMenu = $("contentAreaContextMenu");
+
+  let menuCascaded = {
+    menu: $("repagination_menu"),
+    allMenu: $("repagination_menu_nolimit"),
+    allDomainMenu: $("repagination_menu_nolimit_domain"),
+    stopMenu: $("repagination_menu_stop"),
+    limitMenu: $("repagination_menu_limit"),
+    slideMenu: $("repagination_menu_slide")
+  };
+  let menuPlain = {
+    menu: {},
+    allMenu: $("repagination_nolimit"),
+    allDomainMenu: $("repagination_nolimit_domain"),
+    stopMenu: $("repagination_stop"),
+    limitMenu: $("repagination_limit"),
+    slideMenu: $("repagination_slide")
+  };
+  let menuCurrent;
+
+  prefs.observe("submenu", function(pref, value) {
+    menuCurrent = value ? menuCascaded : menuPlain;
+    let menuDisabled = value ? menuPlain : menuCascaded;
+    for each (let mi in menuDisabled) {
+      mi.hidden = true;
+    }
+  }, true);
+
+  let onContextMenu = function onContextMenu() {
+    function setMenuHidden(hidden) {
+      log(LOG_DEBUG, "set menu hidden = " + hidden);
+      for each (let mi in menuCurrent) {
+        mi.hidden = hidden;
+      }
+      menuCurrent.slideMenu.hidden = menuCurrent.slideMenu.hidden || !prefs.showslideshow;
+      menuCurrent.allDomainMenu.hidden = menuCurrent.allDomainMenu.hidden || !prefs.showalldomain;
+    }
+
+    log(LOG_DEBUG, "context menu showing!");
+    try {
+      if (window.gContextMenu.onLink
+        && /^https?:/.test(fe().href)) {
+        setMenuHidden(!checkSameOrigin(fe().ownerDocument, fe().href));
+        if (!window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
+          menuCurrent.stopMenu.hidden = true;
+        }
         return;
       }
-      repaginate(parseInt(t.getAttribute("value"), 10));
     }
-    function onSlideCommand(evt) {
-      let t = evt.target;
-      if (t.localName != "menuitem") {
-        return;
-      }
-      repaginate(parseInt(t.getAttribute("value"), 10), true);
+    catch (ex) {
+      log(LOG_ERROR, "failed to setup menu (onLink)", ex);
     }
-
-    log(LOG_INFO, "main called!");
-
-    // finish the localization
-    for (let [,n] in Iterator($$$(":-moz-any(#repagination_limit, #repagination_menu_limit) menuitem"))) {
-      n.setAttribute("label", _("pages.label", n.getAttribute("value")));
-    }
-    for (let [,n] in Iterator($$$(":-moz-any(#repagination_slide, #repagination_menu_slide) menuitem:not([label])"))) {
-      let s = parseInt(n.getAttribute("value"), 10);
-      if (s < 60) { 
-        n.setAttribute("label", _("seconds.label", s));
-      }
-      else {
-        n.setAttribute("label", _("minutes.label", parseInt(s / 60, 10)));
+    try {
+      setMenuHidden(true);
+      if (window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
+        menuCurrent.menu.hidden = menuCurrent.stopMenu.hidden = false;
       }
     }
-    let contextMenu = $("contentAreaContextMenu");
-
-    let menuCascaded = {
-      menu: $("repagination_menu"),
-      allMenu: $("repagination_menu_nolimit"),
-      allDomainMenu: $("repagination_menu_nolimit_domain"),
-      stopMenu: $("repagination_menu_stop"),
-      limitMenu: $("repagination_menu_limit"),
-      slideMenu: $("repagination_menu_slide")
-    };
-    let menuPlain = {
-      menu: {},
-      allMenu: $("repagination_nolimit"),
-      allDomainMenu: $("repagination_nolimit_domain"),
-      stopMenu: $("repagination_stop"),
-      limitMenu: $("repagination_limit"),
-      slideMenu: $("repagination_slide")
-    };
-    let menuCurrent;
-
-    prefs.observe("submenu", function(pref, value) {
-      menuCurrent = value ? menuCascaded : menuPlain;
-      let menuDisabled = value ? menuPlain : menuCascaded;
-      for each (let mi in menuDisabled) {
-        mi.hidden = true;
-      }
-    }, true);
-
-    let onContextMenu = function onContextMenu() {
-      function setMenuHidden(hidden) {
-        log(LOG_DEBUG, "set menu hidden = " + hidden);
-        for each (let mi in menuCurrent) {
-          mi.hidden = hidden;
-        }
-        menuCurrent.slideMenu.hidden = menuCurrent.slideMenu.hidden || !prefs.showslideshow;
-        menuCurrent.allDomainMenu.hidden = menuCurrent.allDomainMenu.hidden || !prefs.showalldomain;
-      }
-
-      log(LOG_DEBUG, "context menu showing!");
-      try {
-        if (window.gContextMenu.onLink
-          && /^https?:/.test(fe().href)) {
-          setMenuHidden(!checkSameOrigin(fe().ownerDocument, fe().href));
-          if (!window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
-            menuCurrent.stopMenu.hidden = true;
-          }
-          return;
-        }
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed to setup menu (onLink)", ex);
-      }
-      try {
-        setMenuHidden(true);
-        if (window.gContextMenu.target.ownerDocument.body.hasAttribute("repagination")) {
-          menuCurrent.menu.hidden = menuCurrent.stopMenu.hidden = false;
-        }
-      }
-      catch (ex) {
-        log(LOG_ERROR, "failed to setup menu (plain)", ex);
-      }
+    catch (ex) {
+      log(LOG_ERROR, "failed to setup menu (plain)", ex);
     }
+  }
 
-    contextMenu.addEventListener("popupshowing", onContextMenu, true);
-    menuCascaded.allMenu.addEventListener("command", onAll, true);
-    menuPlain.allMenu.addEventListener("command", onAll, true);
-    menuCascaded.allDomainMenu.addEventListener("command", onAllDomain, true);
-    menuPlain.allDomainMenu.addEventListener("command", onAllDomain, true);
-    menuCascaded.stopMenu.addEventListener("command", onStop, true);
-    menuPlain.stopMenu.addEventListener("command", onStop, true);
-    menuCascaded.limitMenu.addEventListener("command", onLimitCommand, true);
-    menuPlain.limitMenu.addEventListener("command", onLimitCommand, true);
-    menuCascaded.slideMenu.addEventListener("command", onSlideCommand, true);
-    menuPlain.slideMenu.addEventListener("command", onSlideCommand, true);
-    unloadWindow(window, function() {
-      contextMenu.removeEventListener("popuphowing", onContextMenu, true);
-      menuCascaded.allMenu.removeEventListener("command", onAll, true);
-      menuPlain.allMenu.removeEventListener("command", onAll, true);
-      menuCascaded.allDomainMenu.removeEventListener("command", onAllDomain, true);
-      menuPlain.allDomainMenu.removeEventListener("command", onAllDomain, true);
-      menuCascaded.stopMenu.removeEventListener("command", onStop, true);
-      menuPlain.stopMenu.removeEventListener("command", onStop, true);
-      menuCascaded.limitMenu.removeEventListener("command", onLimitCommand, true);
-      menuPlain.limitMenu.removeEventListener("command", onLimitCommand, true);
-      menuCascaded.slideMenu.removeEventListener("command", onSlideCommand, true);
-      menuPlain.slideMenu.removeEventListener("command", onSlideCommand, true);
-      contextMenu = menuPlain = menuCascaded = null;
-    });
-    log(LOG_INFO, "all good!");
-});
+  contextMenu.addEventListener("popupshowing", onContextMenu, true);
+  menuCascaded.allMenu.addEventListener("command", onAll, true);
+  menuPlain.allMenu.addEventListener("command", onAll, true);
+  menuCascaded.allDomainMenu.addEventListener("command", onAllDomain, true);
+  menuPlain.allDomainMenu.addEventListener("command", onAllDomain, true);
+  menuCascaded.stopMenu.addEventListener("command", onStop, true);
+  menuPlain.stopMenu.addEventListener("command", onStop, true);
+  menuCascaded.limitMenu.addEventListener("command", onLimitCommand, true);
+  menuPlain.limitMenu.addEventListener("command", onLimitCommand, true);
+  menuCascaded.slideMenu.addEventListener("command", onSlideCommand, true);
+  menuPlain.slideMenu.addEventListener("command", onSlideCommand, true);
+  unloadWindow(window, function() {
+    contextMenu.removeEventListener("popuphowing", onContextMenu, true);
+    menuCascaded.allMenu.removeEventListener("command", onAll, true);
+    menuPlain.allMenu.removeEventListener("command", onAll, true);
+    menuCascaded.allDomainMenu.removeEventListener("command", onAllDomain, true);
+    menuPlain.allDomainMenu.removeEventListener("command", onAllDomain, true);
+    menuCascaded.stopMenu.removeEventListener("command", onStop, true);
+    menuPlain.stopMenu.removeEventListener("command", onStop, true);
+    menuCascaded.limitMenu.removeEventListener("command", onLimitCommand, true);
+    menuPlain.limitMenu.removeEventListener("command", onLimitCommand, true);
+    menuCascaded.slideMenu.removeEventListener("command", onSlideCommand, true);
+    menuPlain.slideMenu.removeEventListener("command", onSlideCommand, true);
+    contextMenu = menuPlain = menuCascaded = null;
+  });
+  log(LOG_INFO, "all good!");
+}
+registerOverlay(
+  "repagination.xul",
+  "chrome://browser/content/browser.xul",
+  main
+);
+registerOverlay(
+  "repagination.xul",
+  "chrome://navigator/content/navigator.xul",
+  main
+);
 
 /* vim: set et ts=2 sw=2 : */

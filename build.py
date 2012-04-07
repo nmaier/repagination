@@ -8,7 +8,6 @@ resources = [
     "install.rdf",
     "chrome.manifest",
     "*.xul",
-    "*.js", "*.jsm",
     "locale/*/*.dtd",
     "locale/*/*.properties",
     "defaults/preferences/prefs.js",
@@ -17,7 +16,25 @@ resources = [
     ]
 destination = "repagination.xpi"
 
+def get_js_requires(scripts):
+    known = set()
+    scripts = list(scripts)
+    for script in scripts:
+        with open(script) as sp:
+            for line in sp:
+                m = re.search(r"(?:r|lazyR)equire\((['\"])(.+?)\1", line)
+                if not m:
+                    continue
+                m = m.group(2) + ".js"
+                if m in known:
+                    continue
+                known.add(m)
+                scripts += m,
+    return set(scripts)
+
 def get_files(resources):
+    for r in get_js_requires(("bootstrap.js", "loader.jsm")):
+        yield r
     for r in resources:
         if os.path.isfile(r):
             yield r

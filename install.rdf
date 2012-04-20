@@ -7,7 +7,7 @@
     <em:id>{6072cb90-a0bd-11da-a746-0800200c9a66}</em:id>
     <em:name>Re-Pagination</em:name>
     <em:description>Load all consecutive pages in a single tab at once.</em:description>
-    <em:version>2012.04.08</em:version>
+    <em:version>2012.04.20</em:version>
 
     <em:bootstrap>true</em:bootstrap>
     <em:type>2</em:type>

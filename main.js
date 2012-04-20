@@ -7,17 +7,10 @@ const {registerOverlay, unloadWindow} = require("windows");
 const cothreads = lazyRequire("cothreads", "CoThreadInterleaved");
 const timers = lazyRequire("timers", "createTimeout", "destroy");
 
-// l10n
-lazy(this, "strings", (function()
-  Services.strings.createBundle("chrome://repagination/locale/repagination.properties")));
-function _(id) {
-  let args = Array.slice(arguments, 1);
-  if (args.length) {
-    return strings.formatStringFromName(id, args, args.length);
-  }
-  return strings.GetStringFromName(id);
-};
-
+lazy(this, "_", function() {
+  let bundle = require("strings").getBundle("chrome://repagination/locale/repagination.properties");
+  return function _() bundle.getString.apply(bundle, arguments);
+});
 
 function getFirstSnapshot(doc, node, query) doc
   .evaluate(query, node, null, 7, null)

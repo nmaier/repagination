@@ -16,11 +16,17 @@ function Bundle(uri) {
 }
 Bundle.prototype = {
   getString: function getString(id /*, args */) {
-    if (arguments.length > 1) {
-      let args = Array.slice(arguments, 1);
-      return this._bundle.formatStringFromName(id, args, args.length);
+    try {
+      if (arguments.length > 1) {
+        let args = Array.slice(arguments, 1);
+        return this._bundle.formatStringFromName(id, args, args.length);
+      }
+      return this._bundle.GetStringFromName(id);
     }
-    return this._bundle.getStringFromName(id);
+    catch (ex) {
+      log(LOG_ERROR, "invalid string bundle id: " + id, ex);
+      throw ex;
+    }
   }
 };
 

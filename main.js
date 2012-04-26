@@ -469,7 +469,7 @@ function main(window, document) {
       new ctor(fe(), num).repaginate();
     }
     catch (ex) {
-      log(LOG_ERROR, "failed tu run repaginate", ex);
+      log(LOG_ERROR, "failed to run repaginate", ex);
     }
   }
   function repaginate_domain() {

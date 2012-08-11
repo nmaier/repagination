@@ -160,7 +160,7 @@ Repaginator.prototype = {
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
           if (src.trim()) {
-            this.query += "//" + srcEl.localName + "[@src='" + escapeXStr(src) + "‘]/ancestor::a";
+            this.query += "//" + srcEl.localName + "[@src='" + escapeXStr(src) + "']/ancestor::a";
             this.numberToken = /(\[@src='.*?)(\d+)(.*?'\])/;
             log(LOG_DEBUG, "using @src");
             return;
@@ -172,7 +172,7 @@ Repaginator.prototype = {
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
           if (val.trim()) {
-            this.query += "//" + srcEl.localName + "[@value='" + escapeXStr(val) + "‘]/ancestor::a";
+            this.query += "//" + srcEl.localName + "[@value='" + escapeXStr(val) + "']/ancestor::a";
             this.numberToken = /(\[@value='.*?)(\d+)(.*?'\])/;
             log(LOG_DEBUG, "using @value");
             return;

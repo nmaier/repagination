@@ -129,6 +129,9 @@ Repaginator.prototype = {
       (function findPathPrefix() {
         let pieces = [];
         for (let parent = el.parentNode; parent; parent = parent.parentNode) {
+          if (parent.localName == "body") {
+            break;
+          }
           if (parent.id) {
             log(LOG_DEBUG, "got id: " + parent.id);
             pieces.unshift("//" + parent.localName + "[@id='" + escapeXStr(parent.id) + "']");
@@ -357,15 +360,16 @@ Repaginator.prototype = {
       let loc = (doc.location || {}).href || null;
       if (this.attemptToIncrement && (!node || node.href == loc)) {
         log(LOG_DEBUG, "no result after incrementing; restoring");
+        log(LOG_DEBUG, "inc:" + this.query + " orig:" + savedQuery);
         this.query = savedQuery;
         node = doc.evaluate(this.query, doc, null, 9, null).singleNodeValue;
         this.attemptToIncrement = false;
       }
       if (!node) {
-        throw new Error("no next node found");
+        throw new Error("no next node found for query: " + this.query);
       }
       if (loc && loc == node.href) {
-        throw new Error("location did not change");
+        throw new Error("location did not change for query" + this.query);
       }
 
       this.setTitle();

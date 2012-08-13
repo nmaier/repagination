@@ -1,5 +1,5 @@
 <!ENTITY displaySubmenu.label "Untermenü anzeigen">
-<!ENTITY displaySubmenu.desc "Wenn diese Option aktiviert ist (Standard), dann wird Re-Pagination als Untermenü angezeigt anstatt die verschiedenen Aktionen direct im Kontextmenü anzuzeigen.">
+<!ENTITY displaySubmenu.desc "Wenn diese Option aktiviert ist (Standard), dann wird Re-Pagination als Untermenü angezeigt anstatt die verschiedenen Aktionen direkt im Kontextmenü anzuzeigen.">
 <!ENTITY showslideshow.label "'Slide-Show' Menüeintrag anzeigen">
 <!ENTITY showalldomain.label "'Alle Tabs der aktuellen Domain' Menüeintrag anzeigen">
 <!ENTITY loglevel.label "Protokoll Stufe">

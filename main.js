@@ -24,7 +24,13 @@ function checkSameOrigin(node, tryLoadUri) {
     if (tryLoadUri.schemeIs("data")) {
       return true;
     }
-    node.nodePrincipal.checkMayLoad(tryLoadUri, false);
+    let pr = node.nodePrincipal;
+    if (pr.checkMayLoad.length == 3) {
+      pr.checkMayLoad(tryLoadUri, false, false);
+    }
+    else {
+      pr.checkMayLoad(tryLoadUri, false);
+    }
     return true;
   }
   catch (ex) {

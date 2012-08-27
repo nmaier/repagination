@@ -123,13 +123,29 @@ Repaginator.prototype = {
 
     this.query = "";
 
-    // Note: cannot use the id() xpath function here, as there might
-    // be duplicate ids
-    if (el.id) {
-      this.query = "//a[@id='" + escapeXStr(el.id) + "']"; 
-      this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
-    }
-    else {
+    (function buildQuery() {
+      // See if the anchor has an ID
+      // Note: cannot use the id() xpath function here, as there might
+      // be duplicate ids
+      if (el.id) {
+        this.query = "//a[@id='" + escapeXStr(el.id) + "']"; 
+        this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
+        return;
+      }
+
+      // See if the document has a link rel="..." pointing to the same place
+      let linkEl = getFirstSnapshot(el.ownerDocument, el.ownerDocument, "/html/head//link[@href='" + escapeXStr(el.href) + "']");
+      if (linkEl) {
+        let rel = linkEl.getAttribute("rel") || "";
+        if (rel.trim()) {
+          this.query = "/html/head//link[@rel='" + escapeXStr(rel) + "']";
+          // no point in checking for numbers
+          this.attemptToIncrement = false;
+          log(LOG_DEBUG, "using link[@rel]");
+          return;
+        }
+      }
+
       // Find an id in the ancestor chain, or alternatively a class
       // that we may operate on
       (function findPathPrefix() {
@@ -154,9 +170,18 @@ Repaginator.prototype = {
 
       // find the anchor
       (function findAnchor() {
-        let text = el.textContent;
+        // First: see if there is rel=...
+        let rel = el.getAttribute("rel") || "";
+        if (rel.trim()) {
+          this.query += "//a[@rel='" + escapeXStr(text) + "']";
+          // no point in checking for numbers
+          this.attemptToIncrement = false;
+          log(LOG_DEBUG, "using a[@rel]");
+          return;
+        }
 
-        // First: try the node text
+        // Second: try the node text
+        let text = el.textContent;
         if (text.trim()) {
           this.query += "//a[.='" + escapeXStr(text) + "']";
           this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
@@ -164,7 +189,7 @@ Repaginator.prototype = {
           return;
         }
 
-        // Second: see if it has a child with a @src we may use
+        // Third: see if it has a child with a @src we may use
         let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@src]");
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
@@ -176,7 +201,7 @@ Repaginator.prototype = {
           }
         }
 
-        // Third: See if there is a child with a @value we may use
+        // Fourth: See if there is a child with a @value we may use
         let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
@@ -190,8 +215,7 @@ Repaginator.prototype = {
 
         throw new Error("No anchor expression found!");
       }).call(this);
-    }
-
+    }).call(this);
 
     // We're after the last result
     this.query = "(" + this.query + ")[last()]";

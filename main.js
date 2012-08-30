@@ -170,17 +170,7 @@ Repaginator.prototype = {
 
       // find the anchor
       (function findAnchor() {
-        // First: see if there is rel=...
-        let rel = el.getAttribute("rel") || "";
-        if (rel.trim()) {
-          this.query += "//a[@rel='" + escapeXStr(text) + "']";
-          // no point in checking for numbers
-          this.attemptToIncrement = false;
-          log(LOG_DEBUG, "using a[@rel]");
-          return;
-        }
-
-        // Second: try the node text
+        // First: try the node text
         let text = el.textContent;
         if (text.trim()) {
           this.query += "//a[.='" + escapeXStr(text) + "']";
@@ -189,7 +179,7 @@ Repaginator.prototype = {
           return;
         }
 
-        // Third: see if it has a child with a @src we may use
+        // Second: see if it has a child with a @src we may use
         let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@src]");
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
@@ -201,7 +191,7 @@ Repaginator.prototype = {
           }
         }
 
-        // Fourth: See if there is a child with a @value we may use
+        // Third: See if there is a child with a @value we may use
         let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";

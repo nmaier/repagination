@@ -123,13 +123,29 @@ Repaginator.prototype = {
 
     this.query = "";
 
-    // Note: cannot use the id() xpath function here, as there might
-    // be duplicate ids
-    if (el.id) {
-      this.query = "//a[@id='" + escapeXStr(el.id) + "']"; 
-      this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
-    }
-    else {
+    (function buildQuery() {
+      // See if the anchor has an ID
+      // Note: cannot use the id() xpath function here, as there might
+      // be duplicate ids
+      if (el.id) {
+        this.query = "//a[@id='" + escapeXStr(el.id) + "']"; 
+        this.numberToken = /(\[@id='.*?)(\d+)(.*?'\])/;
+        return;
+      }
+
+      // See if the document has a link rel="..." pointing to the same place
+      let linkEl = getFirstSnapshot(el.ownerDocument, el.ownerDocument, "/html/head//link[@href='" + escapeXStr(el.href) + "']");
+      if (linkEl) {
+        let rel = linkEl.getAttribute("rel") || "";
+        if (rel.trim()) {
+          this.query = "/html/head//link[@rel='" + escapeXStr(rel) + "']";
+          // no point in checking for numbers
+          this.attemptToIncrement = false;
+          log(LOG_DEBUG, "using link[@rel]");
+          return;
+        }
+      }
+
       // Find an id in the ancestor chain, or alternatively a class
       // that we may operate on
       (function findPathPrefix() {
@@ -154,9 +170,8 @@ Repaginator.prototype = {
 
       // find the anchor
       (function findAnchor() {
-        let text = el.textContent;
-
         // First: try the node text
+        let text = el.textContent;
         if (text.trim()) {
           this.query += "//a[.='" + escapeXStr(text) + "']";
           this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
@@ -190,8 +205,7 @@ Repaginator.prototype = {
 
         throw new Error("No anchor expression found!");
       }).call(this);
-    }
-
+    }).call(this);
 
     // We're after the last result
     this.query = "(" + this.query + ")[last()]";

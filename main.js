@@ -45,13 +45,14 @@ function createFrame(window, src, loadFun) {
     throw new Error("same origin mismatch; frame creation denied");
   }
   let frame = window.document.createElement("iframe");
+  frame.setAttribute("sandbox", "allow-scripts");
   frame.style.display = "none";
   window.document.body.appendChild(frame);
   let docShell = frame.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell);
   docShell.allowImages = false;
   docShell.allowPlugins = false;
-  docShell.allowDNSPrefetch = false;
+  docShell.allowJavascript = prefs.get("allowscripts", true);
 
   frame.src = src;
   frame.addEventListener("load", function loadHandler() {
@@ -88,7 +89,7 @@ function createFrame(window, src, loadFun) {
   };
   frame.addEventListener("error", errorHandler, false);
   frame.addEventListener("abort", errorHandler, false);
-  
+
   return frame;
 }
 

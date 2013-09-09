@@ -244,6 +244,24 @@ Repaginator.prototype = {
           }
         }
 
+        // Fourth: See if there is rel=next or rel=prev
+        let rel = (el.getAttribute("rel") || "").trim();
+        if (rel && (rel.contains("next") || rel.contains("prev"))) {
+          this.query += "//a[@rel='" + escapeXStr(rel) + "']";
+          // no point in checking for numbers
+          this.attemptToIncrement = false;
+          log(LOG_DEBUG, "using a[@rel]");
+          return;
+        }
+
+        // Fifth: See if there is a class we may use
+        if (el.className) {
+          this.query += "//a[@class='" + escapeXStr(el.className) + "']";
+          this.numberToken = /(\[@class='.*?)(\d+)(.*?'\])/;
+          log(LOG_DEBUG, "using a[@class]");
+          return;
+        }
+
         throw new Error("No anchor expression found!");
       }).call(this);
     }).call(this);

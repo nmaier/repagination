@@ -3,12 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {registerOverlay, unloadWindow} = require("windows");
-const cothreads = lazyRequire("cothreads", "CoThreadInterleaved");
-const timers = lazyRequire("timers", "createTimeout", "destroy");
+const {registerOverlay, unloadWindow} = require("sdk/windows");
+const cothreads = lazyRequire("sdk/cothreads", "CoThreadInterleaved");
+const timers = lazyRequire("sdk/timers", "createTimeout", "destroy");
 
 lazy(this, "_", function() {
-  let bundle = require("strings").getBundle("chrome://repagination/locale/repagination.properties");
+  let bundle = require("sdk/strings").getBundle("chrome://repagination/locale/repagination.properties");
   return function _() bundle.getString.apply(bundle, arguments);
 });
 

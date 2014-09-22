@@ -8,7 +8,6 @@ const global = this;
 function install() {}
 function uninstall() {}
 function startup(data) {
-  // will unload itself 
   Components.utils.import("chrome://repagination/content/loader.jsm");
   _setupLoader(data, function real_startup() {
     require("main");

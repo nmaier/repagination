@@ -12,11 +12,10 @@ Instances.register("XHR", "@mozilla.org/xmlextras/xmlhttprequest;1", "nsIXMLHttp
  * unloaded or the add-on is shut down
  */
 exports.unloadWindow = function unloadWindow(window, fn) {
-  let args = arguments;
   let handler = unload(function() {
     window.removeEventListener('unload', handler, false);
     try {
-      fn.apply(null, args);
+      fn();
     }
     catch (ex) {
       log(LOG_ERROR, "failed to run window unloader", ex);
@@ -170,7 +169,7 @@ exports.registerOverlay = function registerOverlay(src, location, callback) {
   _r.onload = function() {
     log(LOG_DEBUG, "loaded: " + src);
     let document = _r.responseXML;
- 
+
     // clean the document a bit
     let emptyNodes = document.evaluate("//text()[normalize-space(.) = '']", document, null, 7, null);
     for (let i = 0, e = emptyNodes.snapshotLength; i < e; ++i) {

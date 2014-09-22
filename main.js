@@ -194,7 +194,7 @@ Repaginator.prototype = {
         }
 
         // Third: See if there is a child with a @value we may use
-        let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
+        srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
           if (val.trim()) {

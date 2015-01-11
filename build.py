@@ -17,7 +17,8 @@ resources = [
     "locale/*/*.properties",
     "defaults/preferences/prefs.js",
     "icon.png", "icon64.png",
-    "LICENSE.txt"
+    "LICENSE.txt",
+    "content-script.js"
     ]
 destination = "repagination.xpi"
 

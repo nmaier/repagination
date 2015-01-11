@@ -54,7 +54,6 @@ function createFrame(window, src, loadFun) {
   docShell.allowPlugins = false;
   docShell.allowJavascript = prefs.get("allowscripts", true);
 
-  frame.src = src;
   frame.addEventListener("load", function loadHandler() {
     frame.removeEventListener("load", loadHandler, false);
     log(LOG_INFO, "frame loaded, going to process");
@@ -64,7 +63,12 @@ function createFrame(window, src, loadFun) {
     catch (ex) {
       log(LOG_ERROR, "failed to invoke callback on frame", ex);
     }
+    finally {
+      window.document.body.removeChild(frame);
+    }
   }, false);
+  frame.src = src;
+
   let errorCount = 0;
   let errorHandler = function(evt) {
     log(LOG_INFO, "frame err'ed out");
@@ -77,6 +81,9 @@ function createFrame(window, src, loadFun) {
       }
       catch (ex) {
         log(LOG_ERROR, "failed to invoke callback on frame", ex);
+      }
+      finally {
+        window.document.body.removeChild(frame);
       }
       return;
     }
@@ -117,7 +124,7 @@ Repaginator.prototype = {
       throw new Error("No focus element");
     })();
 
-    this._window = weak(focusElement.ownerDocument.defaultView);
+    this._window = focusElement.ownerDocument.defaultView;
   },
   buildQuery: function R_buildQuery(el) {
     function escapeXStr(str) str.replace(/'/g, "\\'");
@@ -215,7 +222,7 @@ Repaginator.prototype = {
     log(LOG_INFO, "query: " + this.query);
   },
   setTitle: function R_setTitle() {
-    let wnd = this._window.get();
+    let wnd = this._window;
     if (!wnd) {
       return;
     }
@@ -233,7 +240,7 @@ Repaginator.prototype = {
     }
   },
   restoreTitle: function R_restoreTitle() {
-    let wnd = this._window.get();
+    let wnd = this._window
     if (this._title && wnd) {
       wnd.document.title = this._title;
       delete this._title;
@@ -241,7 +248,7 @@ Repaginator.prototype = {
   },
   repaginate: function R_repaginate() {
     this.setTitle();
-    let wnd = this._window.get();
+    let wnd = this._window
     if (!wnd) {
       log(LOG_INFO, "window is gone!");
       return;
@@ -287,9 +294,8 @@ Repaginator.prototype = {
   },
   _loadNext_gen: function R__loadNext_gen(element) {
     let ownerDoc = element.ownerDocument;
-    if (!ownerDoc || !this._window.get()) {
+    if (!ownerDoc || !this._window) {
       yield true;
-      element.parentNode.removeChild(element);
       this.restoreTitle();
       log(LOG_INFO, "gone, giving up!");
       return;
@@ -397,10 +403,9 @@ Repaginator.prototype = {
 
       this.setTitle();
       log(LOG_INFO, "next please");
-      let self = weak(this);
+      let self;
       let frame = createFrame(ownerDoc.defaultView, node.href, function continueLoadNext() {
-        self = self.get();
-        if (!self) {
+        if (!self || !self._window || self._window.closed) {
           log(LOG_DEBUG, "self is gone by now");
           return;
         }
@@ -420,10 +425,6 @@ Repaginator.prototype = {
       this.restoreTitle();
       ownerDoc.body.removeAttribute("repagination");
     }
-    if (element && element.parentNode) {
-      yield true;
-      element.parentNode.removeChild(element);
-    }
   }
 };
 Object.seal(Repaginator.prototype);
@@ -431,7 +432,7 @@ Object.seal(Repaginator.prototype);
 function DomainRepaginator(window, focusElement) {
   this.init(focusElement);
   this.buildQuery(focusElement);
-  let wnd = this._window.get();
+  let wnd = this._window;
 
   this._internalPaginators = [];
   let host = wnd.location.hostname;

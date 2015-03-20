@@ -158,6 +158,13 @@ Repaginator.prototype = {
     this.query = "";
 
     (function buildQuery() {
+      // Homestuck hack
+      if(el.href.contains("mspaintadventures.com")) {
+        this.query = "//center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 6]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/font[position() = 1]/a[position() = 1]";
+        this.numberToken = /(\[@href='.*)(\d+)(.*?'\])/;
+        return;
+      }
+
       // See if the anchor has an ID
       // Note: cannot use the id() xpath function here, as there might
       // be duplicate ids

@@ -225,8 +225,8 @@ Repaginator.prototype = {
           return;
         }
 
-        // Second: see if it has a child with a @src we may use
-        let srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@src]");
+        // Second: see if it has a descendant with a @src we may use
+        let srcEl = getFirstSnapshot(el.ownerDocument, el, "descendant::*[@src]");
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
           if (src.trim()) {
@@ -238,8 +238,8 @@ Repaginator.prototype = {
           }
         }
 
-        // Third: See if there is a child with a @value we may use
-        srcEl = getFirstSnapshot(el.ownerDocument, el, "child::*[@value]");
+        // Third: See if there is a descendant with a @value we may use
+        srcEl = getFirstSnapshot(el.ownerDocument, el, "descendant::*[@value]");
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
           if (val.trim()) {

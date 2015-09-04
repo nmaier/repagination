@@ -70,9 +70,6 @@ const checkSameOrigin = (node, tryLoadUri) => {
 
 const createFrame = (window, src, allowScripts, loadFun) => {
   log(LOG_INFO, "creating frame for " + src);
-  if (!checkSameOrigin(window.document, src)) {
-    throw new Error("same origin mismatch; frame creation denied");
-  }
   let frame = window.document.createElement("iframe");
   frame.setAttribute("sandbox", "allow-scripts");
   frame.style.display = "none";

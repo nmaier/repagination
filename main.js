@@ -34,23 +34,6 @@ lazy(this, "_", function() {
   };
 });
 
-function checkSameOrigin(principal, tryLoadUri) {
-  try {
-    if (!(tryLoadUri instanceof Ci.nsIURI)) {
-      tryLoadUri = Services.io.newURI(tryLoadUri, null, null);
-    }
-    if (tryLoadUri.schemeIs("data")) {
-      return true;
-    }
-    principal.checkMayLoad(tryLoadUri, false, true);
-    return true;
-  }
-  catch (ex) {
-    log(LOG_DEBUG, "denied load of " + (tryLoadUri.spec || tryLoadUri), ex);
-    return false;
-  }
-}
-
 function main(window, document) {
   const $ = id => document.getElementById(id);
   const $$$ = q => document.querySelectorAll(q);
@@ -209,8 +192,7 @@ function main(window, document) {
     log(LOG_DEBUG, `context menu showing for ${gContextMenu.frameOuterWindowID}!`);
     try {
       if (gContextMenu.onLink && /^https?$/.test(gContextMenu.linkURI.scheme)) {
-        setMenuHidden(!checkSameOrigin(gContextMenu.principal,
-                                       gContextMenu.linkURL));
+        setMenuHidden(false);
         if (!RUNNING.has(gContextMenu.frameOuterWindowID)) {
           menuCurrent.stopMenu.hidden = true;
         }

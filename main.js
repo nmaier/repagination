@@ -9,7 +9,9 @@ const {registerOverlay, unloadWindow} = require("sdk/windows");
 lazy(this, "_", function() {
   let bundle = require("sdk/strings").
     getBundle("chrome://repagination/locale/repagination.properties");
-  return () => bundle.getString.apply(bundle, arguments);
+  return function() {
+    return bundle.getString.apply(bundle, arguments);
+  };
 });
 
 function checkSameOrigin(node, tryLoadUri) {

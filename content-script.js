@@ -204,6 +204,7 @@ Repaginator.prototype = {
             log(LOG_DEBUG, "got class: " + pn.className);
             pieces.unshift("//" + pn.localName + "[@class='" +
                            escapeXStr(pn.className) + "']");
+            break;
           }
         }
         this.query = pieces.join("");

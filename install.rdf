@@ -10,6 +10,7 @@
     <em:version>2015.10.11</em:version>
 
     <em:bootstrap>true</em:bootstrap>
+    <em:multiprocessCompatible>true</em:multiprocessCompatible>
     <em:type>2</em:type>
 
     <em:optionsURL>chrome://repagination/content/options.xul</em:optionsURL>

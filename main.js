@@ -5,6 +5,26 @@
 
 const {registerOverlay, unloadWindow} = require("sdk/windows");
 
+const RUNNING = new Set();
+const globalMM = Cc["@mozilla.org/globalmessagemanager;1"].
+                 getService(Ci.nsIMessageListenerManager);
+
+function registerRunning(m) {
+  RUNNING.add(m.data.id);
+  log(LOG_DEBUG, `added ${m.data.id} to running`);
+}
+
+function unregisterRunning(m) {
+  RUNNING.delete(m.data.id);
+  log(LOG_DEBUG, `removed ${m.data.id} from running`);
+}
+globalMM.addMessageListener("repagination:register", registerRunning);
+globalMM.addMessageListener("repagination:unregister", unregisterRunning);
+unload(() => {
+  globalMM.removeMessageListener("repagination:register", registerRunning);
+  globalMM.removeMessageListener("repagination:unregister", unregisterRunning);
+});
+
 /* globals _ */
 lazy(this, "_", function() {
   let bundle = require("sdk/strings").
@@ -14,7 +34,7 @@ lazy(this, "_", function() {
   };
 });
 
-function checkSameOrigin(node, tryLoadUri) {
+function checkSameOrigin(principal, tryLoadUri) {
   try {
     if (!(tryLoadUri instanceof Ci.nsIURI)) {
       tryLoadUri = Services.io.newURI(tryLoadUri, null, null);
@@ -22,18 +42,7 @@ function checkSameOrigin(node, tryLoadUri) {
     if (tryLoadUri.schemeIs("data")) {
       return true;
     }
-    let pr = node.nodePrincipal;
-    pr = Cc["@mozilla.org/scriptsecuritymanager;1"].
-      getService(Ci.nsIScriptSecurityManager).
-      getAppCodebasePrincipal(pr.URI,
-                              pr.appId,
-                              pr.isInBrowserElement);
-    if (pr.checkMayLoad.length == 3) {
-      pr.checkMayLoad(tryLoadUri, false, false);
-    }
-    else {
-      pr.checkMayLoad(tryLoadUri, false);
-    }
+    principal.checkMayLoad(tryLoadUri, false, true);
     return true;
   }
   catch (ex) {
@@ -196,14 +205,13 @@ function main(window, document) {
         menuCurrent.allDomainMenu.hidden || !prefs.showalldomain;
     }
 
-    log(LOG_DEBUG, "context menu showing!");
+    let {gContextMenu} = window;
+    log(LOG_DEBUG, `context menu showing for ${gContextMenu.frameOuterWindowID}!`);
     try {
-      if (window.gContextMenu.onLink &&
-          /^https?$/.test(window.gContextMenu.linkURI.scheme)) {
-        setMenuHidden(!checkSameOrigin(window.gContextMenu.target.ownerDocument,
-                                       window.gContextMenu.linkURL));
-        let body = window.gContextMenu.target.ownerDocument.body;
-        if (!body.hasAttribute("repagination")) {
+      if (gContextMenu.onLink && /^https?$/.test(gContextMenu.linkURI.scheme)) {
+        setMenuHidden(!checkSameOrigin(gContextMenu.principal,
+                                       gContextMenu.linkURL));
+        if (!RUNNING.has(gContextMenu.frameOuterWindowID)) {
           menuCurrent.stopMenu.hidden = true;
         }
         return;
@@ -214,8 +222,7 @@ function main(window, document) {
     }
     try {
       setMenuHidden(true);
-      let body = window.gContextMenu.target.ownerDocument.body;
-      if (body.hasAttribute("repagination")) {
+      if (RUNNING.has(gContextMenu.frameOuterWindowID)) {
         menuCurrent.menu.hidden = menuCurrent.stopMenu.hidden = false;
       }
     }

@@ -87,7 +87,7 @@ const createFrame = (window, src, allowScripts, loadFun) => {
     frame.removeEventListener("load", loadHandler, false);
     log(LOG_INFO, "frame loaded, going to process");
     try {
-      loadFun.call(frame);
+      loadFun(frame);
     }
     catch (ex) {
       log(LOG_ERROR, "failed to invoke callback on frame", ex);
@@ -103,7 +103,7 @@ const createFrame = (window, src, allowScripts, loadFun) => {
       frame.removeEventListener("abort", errorHandler, false);
       log(LOG_ERROR, "frame err'ed out, giving up");
       try {
-        loadFun.call(frame);
+        loadFun(frame);
       }
       catch (ex) {
         log(LOG_ERROR, "failed to invoke callback on frame", ex);
@@ -279,6 +279,13 @@ Repaginator.prototype = {
       delete this._title;
     }
   },
+  unregister: function R_unregister() {
+    sendAsyncMessage("repagination:unregister", {id: this.frameId});
+    if (this._window) {
+      this._window.document.body.removeAttribute("repagination");
+      this._window.removeEventListener("beforeunload", this.unload, true);
+    }
+  },
   repaginate: function R_repaginate() {
     this.setTitle();
     let wnd = this._window;
@@ -286,6 +293,16 @@ Repaginator.prototype = {
       log(LOG_INFO, "window is gone!");
       return;
     }
+    this.frameId = wnd.QueryInterface(Ci.nsIInterfaceRequestor).
+                       getInterface(Ci.nsIDOMWindowUtils).
+                       outerWindowID;
+    sendAsyncMessage("repagination:register", {id: this.frameId});
+    this.unload = () => {
+      log(LOG_DEBUG, "unload");
+      this.unregister();
+    };
+    wnd.addEventListener("beforeunload", this.unload, true);
+
     try {
       let node = wnd.document.evaluate(
         this.query, wnd.document, null, 9, null).singleNodeValue;
@@ -293,14 +310,13 @@ Repaginator.prototype = {
         throw new Error("no node");
       }
       wnd.document.body.setAttribute("repagination", "true");
-      let self = this;
-      createFrame(wnd, node.href, this.allowScripts, function() {
-        self.loadNext(this, 0);
+      createFrame(wnd, node.href, this.allowScripts, frame => {
+        this.loadNext(frame, 0);
       });
     }
     catch (ex) {
+      this.unregister();
       this.restoreTitle();
-      wnd.document.body.removeAttribute("repagination");
       log(LOG_ERROR, "repaginate failed", ex);
     }
   },
@@ -365,6 +381,7 @@ Repaginator.prototype = {
       let ownerDoc = element.ownerDocument;
       if (!ownerDoc || !this._window) {
         yield true;
+        this.unregister();
         this.restoreTitle();
         log(LOG_INFO, "gone, giving up!");
         return;
@@ -474,28 +491,28 @@ Repaginator.prototype = {
 
         this.setTitle();
         log(LOG_INFO, "next please");
-        let self = this;
         createFrame(ownerDoc.defaultView, node.href, this.allowScripts,
-                    function continueLoadNext() {
-          if (!self || !self._window || self._window.closed) {
+                    frame => {
+          if (!this._window || this._window.closed) {
             log(LOG_DEBUG, "self is gone by now");
-            self.restoreTitle();
+            this.unregister();
+            this.restoreTitle();
             return;
           }
-          if (self.slideshow && self.seconds) {
-            log(LOG_INFO, "slideshow; delay: " + self.seconds * 1000);
-            self.loadNext(this, self.seconds * 1000);
+          if (this.slideshow && this.seconds) {
+            log(LOG_INFO, "slideshow; delay: " + this.seconds * 1000);
+            this.loadNext(frame, this.seconds * 1000);
           }
           else {
             log(LOG_INFO, "regular; no-delay");
-            self.loadNext(this, 0);
+            this.loadNext(frame, 0);
           }
         });
       }
       catch (ex) {
         log(LOG_INFO, "loadNext complete", ex);
+        this.unregister();
         this.restoreTitle();
-        ownerDoc.body.removeAttribute("repagination");
       }
     }
     finally {

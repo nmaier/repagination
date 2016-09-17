@@ -156,7 +156,7 @@ Repaginator.prototype = {
 
     (function buildQuery() {
       // Homestuck hack
-      if(el.href.contains("mspaintadventures.com")) {
+      if(el.href.includes("mspaintadventures.com")) {
         this.query = "//center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 6]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/font[position() = 1]/a[position() = 1]";
         this.numberToken = /(\[@href='.*)(\d+)(.*?'\])/;
         return;
@@ -251,7 +251,7 @@ Repaginator.prototype = {
 
         // Fourth: See if there is rel=next or rel=prev
         let rel = (el.getAttribute("rel") || "").trim();
-        if (rel && (rel.contains("next") || rel.contains("prev"))) {
+        if (rel && (rel.includes("next") || rel.includes("prev"))) {
           this.query += "//a[@rel='" + escapeXStr(rel) + "']";
           // no point in checking for numbers
           this.attemptToIncrement = false;

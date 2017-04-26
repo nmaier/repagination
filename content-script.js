@@ -215,7 +215,17 @@ Repaginator.prototype = {
       (function findAnchor() {
         let text = el.textContent;
 
-        // First: try the node text
+        // See if there is rel=next or rel=prev
+        let rel = (el.getAttribute("rel") || "").trim();
+        if (rel && (rel.includes("next") || rel.includes("prev"))) {
+          this.query += "//a[@rel='" + escapeXStr(rel) + "']";
+          // no point in checking for numbers
+          this.attemptToIncrement = false;
+          log(LOG_DEBUG, "using a[@rel]");
+          return;
+        }
+
+        // Try the node text
         if (text.trim()) {
           this.query += "//a[.='" + escapeXStr(text) + "']";
           this.numberToken = /(a\[.='.*?)(\d+)(.*?\])/;
@@ -223,7 +233,7 @@ Repaginator.prototype = {
           return;
         }
 
-        // Second: see if it has a descendant with a @src we may use
+        // See if it has a descendant with a @src we may use
         let srcEl = getFirstSnapshot(el.ownerDocument, el, "descendant::*[@src]");
         if (srcEl) {
           let src = srcEl.getAttribute("src") || "";
@@ -236,7 +246,7 @@ Repaginator.prototype = {
           }
         }
 
-        // Third: See if there is a descendant with a @value we may use
+        // See if there is a descendant with a @value we may use
         srcEl = getFirstSnapshot(el.ownerDocument, el, "descendant::*[@value]");
         if (srcEl) {
           let val = srcEl.getAttribute("value") || "";
@@ -249,17 +259,7 @@ Repaginator.prototype = {
           }
         }
 
-        // Fourth: See if there is rel=next or rel=prev
-        let rel = (el.getAttribute("rel") || "").trim();
-        if (rel && (rel.includes("next") || rel.includes("prev"))) {
-          this.query += "//a[@rel='" + escapeXStr(rel) + "']";
-          // no point in checking for numbers
-          this.attemptToIncrement = false;
-          log(LOG_DEBUG, "using a[@rel]");
-          return;
-        }
-
-        // Fifth: See if there is a class we may use
+        // See if there is a class we may use
         if (el.className) {
           this.query += "//a[@class='" + escapeXStr(el.className) + "']";
           this.numberToken = /(\[@class='.*?)(\d+)(.*?'\])/;

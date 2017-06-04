@@ -428,9 +428,6 @@ Repaginator.prototype = {
         // Note: This is NOT a security mechanism, but a performance thing.
         Array.forEach(doc.querySelectorAll("script"),
                       s => s.parentNode.removeChild(s));
-        Array.forEach(doc.querySelectorAll("noscript"),
-                      s => s.parentNode.removeChild(s));
-
         yield true;
 
         // Do the dirty deed

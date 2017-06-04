@@ -40,34 +40,6 @@ const _ = function() {
 const getFirstSnapshot = (doc, node, query) =>
   doc.evaluate(query, node, null, 7, null).snapshotItem(0);
 
-const checkSameOrigin = (node, tryLoadUri) => {
-  try {
-    if (!(tryLoadUri instanceof Ci.nsIURI)) {
-      tryLoadUri = Services.io.newURI(tryLoadUri, null, null);
-    }
-    if (tryLoadUri.schemeIs("data")) {
-      return true;
-    }
-    let pr = node.nodePrincipal;
-    pr = Cc["@mozilla.org/scriptsecuritymanager;1"].
-      getService(Ci.nsIScriptSecurityManager).
-      getAppCodebasePrincipal(pr.URI,
-                              pr.appId,
-                              pr.isInBrowserElement);
-    if (pr.checkMayLoad.length == 3) {
-      pr.checkMayLoad(tryLoadUri, false, false);
-    }
-    else {
-      pr.checkMayLoad(tryLoadUri, false);
-    }
-    return true;
-  }
-  catch (ex) {
-    log(LOG_DEBUG, "denied load of " + (tryLoadUri.spec || tryLoadUri), ex);
-    return false;
-  }
-};
-
 const createFrame = (window, src, allowScripts, loadFun) => {
   log(LOG_INFO, "creating frame for " + src);
   let frame = window.document.createElement("iframe");
@@ -416,9 +388,6 @@ Repaginator.prototype = {
         }
 
         var doc = element.contentDocument;
-        if (!checkSameOrigin(ownerDoc, doc.defaultView.location)) {
-          throw new Error("not in the same origin anymore");
-        }
         this.pageCount++;
 
         // Remove scripts from frame

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+body {
+  width: 25em;
+  font-family: "Open Sans Light", sans-serif;
+  font-size: 0.9em;
+  font-weight: 300;
+}
+
+section.clear-options {
+  padding: 0.5em 0;
+  margin: 1em 0;
+}
+
+#clear-button {
+  margin: 0 1.3em 1em 0;
+}
+
+section.clear-options input,
+section.clear-options>select,
+#clear-button {
+  float: right;
+}
+
+label {
+  display: block;
+  padding: 0.2em 0;
+}
+
+label:hover {
+  background-color: #EAEFF2;
+}
+
+.title {
+  font-size: 1.2em;
+  margin-bottom: 0.5em;
+}
+    </style>
+  </head>
+<body>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+  <section>
+ <label>Show 'Slideshow' menu item<input type="checkbox" data-type="slideshows"/></label>
+ <label>Run scripts in loaded pages<input type="checkbox" data-type="allowScripts"/></label>
+ <label>Yielding<input type="checkbox" data-type="yielding"/></label>
+  <label>Log level <select id="loglevel">
+        <option value="2147483647" selected>None</option> 
+        <option value="2">Error</option>
+        <option value="1">Info</option>
+        <option value="0">Debug</option>
+</select></label>
+ 
+    <input type="button" value="Save preferences" id="save-button"/>
+    <input type="button" value="Restore defaults" id="restore-button"/>
+
+    </section>
+    <script src="options.js" />
+<section>
+<h3>Credits</h3>
+<ul>
+<li>Original developer: Omar Lev</li>
+<li>Developer, translator: Nils Maier</li>
+<li>Current maintainer: Mathnerd314</li>
+</section>
+</body>

@@ -1,0 +1,44 @@
+{
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "version": "2017.09.14",
+  "description": "__MSG_extensionDescription__",
+  "homepage_url": "https://github.com/Mathnerd314/repagination/",
+
+  "default_locale": "en",
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": true
+  },
+  "icons": {  "32": "icon32.png",
+              "48": "icon.png",
+              "64": "icon64.png"},
+
+  "applications": {
+    "gecko": {
+      "id": "{6072cb90-a0bd-11da-a746-0800200c9a66}",
+      "strict_min_version": "48.0",
+      "strict_max_version": "*"
+    }
+  },
+
+  "content_scripts": [
+      {
+          "matches": ["<all_urls>"],
+          "js": ["clicked_element.js"]
+      }
+  ],
+
+  "background": {
+    "scripts": ["main.js"]
+  },
+
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "webNavigation",
+    "contextMenus",
+    "<all_urls>"
+  ]
+}

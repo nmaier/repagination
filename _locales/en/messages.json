@@ -1,0 +1,83 @@
+{
+  "displaySubmenu.label": {
+    "message": "Display submenu"
+  },
+  "displaySubmenu.desc": {
+    "message": "When this option is enabled (default), then Re-Pagination will be displayed as a submenu instead of displaying the various actions directly within the context menu."
+  },
+  "showslideshow.label": {
+    "message": "Show 'Slideshow' menu item"
+  },
+  "showalldomain.label": {
+    "message": "Show 'All tabs for current domain' menu item"
+  },
+  "loglevel.label": {
+    "message": "Log level"
+  },
+  "loglevel.desc": {
+    "message": "The messages will be logged to the Error Console. You should leave this at 'No Logging' unless instructed otherwise"
+  },
+  "loglevel.none.label": {
+    "message": "No Logging"
+  },
+  "loglevel.error.label": {
+    "message": "Log Errors"
+  },
+  "loglevel.info.label": {
+    "message": "Log Errors and Infos"
+  },
+  "loglevel.debug.label": {
+    "message": "Log Everything!"
+  },
+  "menu.label": {
+    "message": "Re-Pagination"
+  },
+  "repagination_nolimit": {
+    "message": "Load all"
+  },
+  "repagination_nolimit_domain": {
+    "message": "All tabs for current domain"
+  },
+  "repagination_limit": {
+    "message": "Limited"
+  },
+  "repagination_limit_x": {
+    "message": "$1 pages"
+  },
+  "repagination_slide": {
+    "message": "Slideshow"
+  },
+  "repagination_slide_0": {
+    "message": "Immediately"
+  },
+  "repagination_slide_1": {
+    "message": "1 second"
+  },
+  "repagination_slide_x": {
+    "message": "$1 seconds"
+  },
+  "repagination_slide_60": {
+    "message": "1 minute"
+  },
+  "repagination_slide_120": {
+    "message": "2 minutes"
+  },
+  "repagination_stop": {
+    "message": "Stop!"
+  },
+  "repagination_limited": {
+    "message": "($1 of $2) Re-Pagination is running..."
+  },
+  "repagination_unlimited": {
+    "message": "($1) Re-Pagination is running..."
+  },
+  "repagination_running": {
+    "message": "Re-Pagination is running..."
+  },
+  "extensionName": {
+    "message": "Re-Pagination"
+  },
+  "extensionDescription": {
+    "message": "Load all consecutive pages in a single tab at once."
+  }
+}

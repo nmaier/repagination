@@ -10,15 +10,11 @@ from glob import glob
 from zipfile import ZipFile, ZIP_STORED, ZIP_DEFLATED
 
 resources = [
-    "install.rdf",
-    "chrome.manifest",
-    "*.xul",
-    "locale/*/*.dtd",
-    "locale/*/*.properties",
-    "defaults/preferences/prefs.js",
-    "icon.png", "icon64.png",
+    "manifest.json",
+    "_locales/*/messages.json",
+    "icon.png", "icon32.png", "icon64.png",
     "LICENSE.txt",
-    "content-script.js"
+    "*.js", "options.html"
     ]
 destination = "repagination.xpi"
 
@@ -34,26 +30,7 @@ except ImportError:
         yield
 
 
-def get_js_requires(scripts):
-    known = set()
-    scripts = list(scripts)
-    for script in scripts:
-        with open(script) as sp:
-            for line in sp:
-                m = re.search(r"(?:r|lazyR)equire\((['\"])(.+?)\1", line)
-                if not m:
-                    continue
-                m = m.group(2) + ".js"
-                if m in known:
-                    continue
-                known.add(m)
-                scripts += m,
-    return set(scripts)
-
-
 def get_files(resources):
-    for r in get_js_requires(("bootstrap.js", "loader.jsm")):
-        yield r
     for r in resources:
         if os.path.isfile(r):
             yield r

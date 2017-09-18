@@ -8,6 +8,12 @@ if(!("port" in this)) {
     return browser.i18n.getMessage(args[0], args.slice(1));
   }
 
+  const equalLinks = (left, right) =>
+    left.pathname === right.pathname &&
+    left.search === right.search &&
+    left.host === right.host &&
+    left.protocol === right.protocol;
+  
   const getFirstSnapshot = (doc, node, query) =>
     doc.evaluate(query, node, null, 7, null).snapshotItem(0);
 
@@ -100,8 +106,6 @@ if(!("port" in this)) {
         }
         throw new Error("No focus element");
       })();
-
-      this._window = focusElement.ownerDocument.defaultView;
     },
     buildQuery: function R_buildQuery(el) {
       function escapeXStr(str) {
@@ -388,16 +392,13 @@ if(!("port" in this)) {
           if (loc && loc == nexturl) {
             throw new Error("location did not change for query" + this.query);
           }
+          if (equalLinks(node,window.location)) {
+            throw new Error("loop back to first item");
+          }
 
           this.setTitle();
           console.info("next please: " + nexturl);
           createFrame(nexturl, this.allowScripts, frame => {
-            if (!this._window || this._window.closed) {
-              console.log("self is gone by now");
-              this.unregister();
-              this.restoreTitle();
-              return;
-            }
             if (this.slideshow && this.seconds) {
               console.info("slideshow; delay: " + this.seconds * 1000);
               this.loadNext(nexturl, frame, this.seconds * 1000);

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "2017.09.14",
+  "version": "2017.10.12",
   "description": "__MSG_extensionDescription__",
   "homepage_url": "https://github.com/Mathnerd314/repagination/",
 

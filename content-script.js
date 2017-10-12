@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 if(!("port" in this)) {
+  var focusElement = null;
   const _ = function () {
     let args = Array.map(arguments, e => e.toString());
     return browser.i18n.getMessage(args[0], args.slice(1));
@@ -82,11 +83,11 @@ if(!("port" in this)) {
     return myframe;
   };
 
-  const Repaginator = function Repaginator(focusElement, count, allowScripts, yielding) {
+  const Repaginator = function Repaginator(count, allowScripts, yielding) {
     this.pageLimit = count || 0;
     this.allowScripts = allowScripts;
     this.yielding = yielding;
-    this.init(focusElement);
+    this.init();
   };
   Repaginator.prototype = {
     slideshow: false,
@@ -95,7 +96,7 @@ if(!("port" in this)) {
     pageCount: 0,
     attemptToIncrement: true,
 
-    init: function R_init(focusElement) {
+    init: function R_init() {
       // find anchor
       (function findInitialAnchor() {
         for (let parent = focusElement; parent; parent = parent.parentNode) {
@@ -108,15 +109,15 @@ if(!("port" in this)) {
       })();
     },
     buildQuery: function R_buildQuery(el) {
-      function escapeXStr(str) {
-        return str.replace(/'/g, "\\'");
+      function escapeXStr(mystr) {
+        return mystr.replace(/'/g, "\\'");
       }
 
       this.query = "";
 
       (function buildQuery() {
         // Homestuck hack
-        if(el.href.includes("mspaintadventures.com")) {
+        if(el.href && el.href.includes("mspaintadventures.com")) {
           this.query = "//center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 2]/td[position() = 1]/center[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 6]/td[position() = 1]/table[position() = 1]/tbody[position() = 1]/tr[position() = 1]/td[position() = 1]/font[position() = 1]/a[position() = 1]";
           this.numberToken = /(\[@href='.*)(\d+)(.*?'\])/;
           return;
@@ -423,13 +424,12 @@ if(!("port" in this)) {
   };
   Object.seal(Repaginator.prototype);
 
-  const Slideshow = function Slideshow(focusElement, seconds, allowScripts, yielding) {
+  const Slideshow = function Slideshow(seconds, allowScripts, yielding) {
     this.seconds = seconds || 0;
     this.slideshow = true;
     this.allowScripts = allowScripts;
     this.yielding = yielding;
-    this.init(focusElement);
-    this.buildQuery(focusElement);
+    this.init();
   };
   Slideshow.prototype = Repaginator.prototype;
 
@@ -438,9 +438,9 @@ if(!("port" in this)) {
       let Ctor = slideshow ? Slideshow : Repaginator;
       let rep;
       // c.f. clicked_element.js
-      let el = clickedEl;
-      rep = new Ctor(clickedEl, num, allowScripts, yielding);
-      rep.buildQuery(el);
+      focusElement = clickedEl;
+      rep = new Ctor(num, allowScripts, yielding);
+      rep.buildQuery(focusElement);
       rep.repaginate();
     }
     catch (ex) {

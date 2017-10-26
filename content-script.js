@@ -20,67 +20,29 @@ if(!("port" in this)) {
 
   const createFrame = (srcurl, allowScripts, loadFun) => {
     let errorCount = 0;
-    console.info("creating frame for " + srcurl);
-    let myframe = document.createElement("iframe");
-    myframe.setAttribute("sandbox", "allow-same-origin");
-    myframe.style.display = "none";
-    document.body.appendChild(myframe);
-
     function sendRequest() {
       var xhr = new XMLHttpRequest();
       xhr.onload  =  function()  {
         if (xhr.status == 200) {
-          console.info("XHR loaded");
-          myframe.addEventListener("load", function loadHandler() {
-            myframe.removeEventListener("load", loadHandler, false);
-            console.info("myframe loaded, going to process");
-            try {
-              loadFun(myframe);
-            }
-            catch (ex) {
-              console.error("failed to invoke callback on myframe", ex);
-            }
-          }, false);
-          myframe.srcdoc = xhr.responseText;
+          console.info("XHR loaded, going to process");
+          try {
+            loadFun(xhr.responseXML);
+          }
+          catch (ex) {
+            console.error("failed to invoke callback on XHR", ex);
+          }
         } else if (++errorCount <= 5) {
           console.info("XHR err'ed out, retrying");
-          sendRequest();
+          setTimeout(function(){ sendRequest(); }, 500 * (2**errorCount));
         } else {
-          myframe.removeEventListener("error", errorHandler, false);
-          myframe.removeEventListener("abort", errorHandler, false);
           console.error("XHR err'ed out, giving up");
-          try {
-            loadFun(myframe);
-          } catch (ex) {
-            console.error("failed to invoke callback on myframe", ex);
-          }
         }
       }
       xhr.open('GET', srcurl);
+      xhr.responseType = "document";
       xhr.send();
     }
-    
-    let errorHandler = function() {
-      if (++errorCount > 5) {
-        myframe.removeEventListener("error", errorHandler, false);
-        myframe.removeEventListener("abort", errorHandler, false);
-        console.error("myframe load err'ed out, giving up");
-        try {
-          loadFun(myframe);
-        } catch (ex) {
-          console.error("failed to invoke callback on myframe", ex);
-        }
-        return;
-      } else {
-        console.info("myframe load err'ed out, retrying");
-        sendRequest();
-      }
-    };
-    myframe.addEventListener("error", errorHandler, false);
-    myframe.addEventListener("abort", errorHandler, false);
-
     sendRequest();
-    return myframe;
   };
 
   const Repaginator = function Repaginator(count, allowScripts, yielding) {
@@ -311,114 +273,110 @@ if(!("port" in this)) {
       return;
     },
     _loadNext_gen: function R__loadNext_gen(src, element) {
+      let ownerDoc = document;
+
       try {
-        let ownerDoc = document;
+        if (!ownerDoc.body.hasAttribute("repagination")) {
+          throw new Error("not running");
+        }
 
-        try {
-          if (!document.body.hasAttribute("repagination")) {
-            throw new Error("not running");
+        var doc = element;
+        this.pageCount++;
+
+        // Remove scripts from frame
+        // The scripts should already be present in the parent (first page)
+        // Duplicate scripts would cause more havoc (performance-wise) than
+        // behaviour failures due to missing scripts
+        // Note: This is NOT a security mechanism, but a performance thing.
+        Array.forEach(doc.querySelectorAll("script"),
+                      s => s.parentNode.removeChild(s));
+        //yield true;
+
+        // Do the dirty deed
+        // Note: same-origin checked; see above
+        if (this.slideshow) {
+          console.info("replacing content (slideshow)");
+          ownerDoc.body.innerHTML = doc.body.innerHTML;
+          ownerDoc.body.setAttribute("repagination", "true");
+        }
+        else {
+          console.info("inserting content (normal)");
+          // Remove non-same-origin iframes, such as ad iframes
+          // Otherwise we might create a shitload of (nearly) identical frames
+          // which might even kill the browser
+          if (!this.pageLimit || this.pageLimit > 10) {
+            console.info("removing non-same-origin iframes to avoid dupes");
+            let host = ownerDoc.defaultView.location.hostName;
+            Array.forEach(doc.querySelectorAll("iframe"), function(f) {
+              var url = new URL(f.src, ownerDoc.defaultView.location.href);
+              if (url.hostname != host) {
+                f.parentNode.removeChild(f);
+              }
+            });
+            //yield true;
           }
-
-          var doc = element.contentDocument;
-          this.pageCount++;
-
-          // Remove scripts from frame
-          // The scripts should already be present in the parent (first page)
-          // Duplicate scripts would cause more havoc (performance-wise) than
-          // behaviour failures due to missing scripts
-          // Note: This is NOT a security mechanism, but a performance thing.
-          Array.forEach(doc.querySelectorAll("script"),
-                        s => s.parentNode.removeChild(s));
-          //yield true;
-
-          // Do the dirty deed
-          // Note: same-origin checked; see above
-          if (this.slideshow) {
-            console.info("replacing content (slideshow)");
-            ownerDoc.body.innerHTML = doc.body.innerHTML;
-            ownerDoc.body.setAttribute("repagination", "true");
+          for (let c = doc.body.firstChild; c; c = c.nextSibling) {
+            ownerDoc.body.appendChild(ownerDoc.importNode(c, true));
+            //yield true;
           }
-          else {
-            console.info("inserting content (normal)");
-            // Remove non-same-origin iframes, such as ad iframes
-            // Otherwise we might create a shitload of (nearly) identical frames
-            // which might even kill the browser
-            if (!this.pageLimit || this.pageLimit > 10) {
-              console.info("removing non-same-origin iframes to avoid dupes");
-              let host = ownerDoc.defaultView.location.hostName;
-              Array.forEach(doc.querySelectorAll("iframe"), function(f) {
-                if (f.contentWindow.location.hostname != host) {
-                  f.parentNode.removeChild(f);
-                }
-              });
-              //yield true;
-            }
-            for (let c = doc.body.firstChild; c; c = c.nextSibling) {
-              ownerDoc.body.appendChild(ownerDoc.importNode(c, true));
-              //yield true;
-            }
-          }
+        }
 
-          if (this.pageLimit && this.pageCount >= this.pageLimit) {
-            throw new Error("done");
-          }
+        if (this.pageLimit && this.pageCount >= this.pageLimit) {
+          throw new Error("done");
+        }
 
-          let savedQuery;
-          if (this.attemptToIncrement) {
-            console.log("attempting to increment query");
-            let nq = this.incrementQuery();
-            if (nq == this.query) {
-              console.log("query did not increment");
-              this.attemptToIncrement = false;
-            }
-            else {
-              console.log("query did increment");
-              savedQuery = this.query;
-              this.query = nq;
-            }
-          }
-          let node = doc.evaluate(this.query, doc, null, 9, null).singleNodeValue;
-          let loc = src || null;
-          if (this.attemptToIncrement && (!node || node.href == loc)) {
-            console.log("no result after incrementing; restoring");
-            console.log("inc:" + this.query + " orig:" + savedQuery);
-            this.query = savedQuery;
-            node = doc.evaluate(this.query, doc, null, 9, null).singleNodeValue;
+        let savedQuery;
+        if (this.attemptToIncrement) {
+          console.log("attempting to increment query");
+          let nq = this.incrementQuery();
+          if (nq == this.query) {
+            console.log("query did not increment");
             this.attemptToIncrement = false;
           }
-          if (!node) {
-            throw new Error("no next node found for query: " + this.query);
+          else {
+            console.log("query did increment");
+            savedQuery = this.query;
+            this.query = nq;
           }
-          let nexturl = node.href.toString();
-          if (loc && loc == nexturl) {
-            throw new Error("location did not change for query" + this.query);
-          }
-          if (equalLinks(node,window.location)) {
-            throw new Error("loop back to first item");
-          }
+        }
+        let node = doc.evaluate(this.query, doc, null, 9, null).singleNodeValue;
+        let loc = src || null;
+        if (this.attemptToIncrement && (!node || node.href == loc)) {
+          console.log("no result after incrementing; restoring");
+          console.log("inc:" + this.query + " orig:" + savedQuery);
+          this.query = savedQuery;
+          node = doc.evaluate(this.query, doc, null, 9, null).singleNodeValue;
+          this.attemptToIncrement = false;
+        }
+        if (!node) {
+          throw new Error("no next node found for query: " + this.query);
+        }
+        let nexturl = node.href.toString();
+        if (loc && loc == nexturl) {
+          throw new Error("location did not change for query" + this.query);
+        }
+        if (equalLinks(node,window.location)) {
+          throw new Error("loop back to first item");
+        }
 
-          this.setTitle();
-          console.info("next please: " + nexturl);
-          createFrame(nexturl, this.allowScripts, frame => {
-            if (this.slideshow && this.seconds) {
-              console.info("slideshow; delay: " + this.seconds * 1000);
-              this.loadNext(nexturl, frame, this.seconds * 1000);
-            }
-            else {
-              console.info("regular; no-delay");
-              this.loadNext(nexturl, frame, 0);
-            }
-          });
-        }
-        catch (ex) {
-          console.log(ex);
-          console.info("loadNext complete");
-          this.unregister();
-          this.restoreTitle();
-        }
+        this.setTitle();
+        console.info("next please: " + nexturl);
+        createFrame(nexturl, this.allowScripts, frame => {
+          if (this.slideshow && this.seconds) {
+            console.info("slideshow; delay: " + this.seconds * 1000);
+            this.loadNext(nexturl, frame, this.seconds * 1000);
+          }
+          else {
+            console.info("regular; no-delay");
+            this.loadNext(nexturl, frame, 0);
+          }
+        });
       }
-      finally {
-        element.parentElement.removeChild(element);
+      catch (ex) {
+        console.log(ex);
+        console.info("loadNext complete");
+        this.unregister();
+        this.restoreTitle();
       }
     }
   };

@@ -19,12 +19,6 @@ section.clear-options {
   margin: 0 1.3em 1em 0;
 }
 
-section.clear-options input,
-section.clear-options>select,
-#clear-button {
-  float: right;
-}
-
 label {
   display: block;
   padding: 0.2em 0;
@@ -45,21 +39,10 @@ label:hover {
    - License, v. 2.0. If a copy of the MPL was not distributed with this file,
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
   <section>
- <label>Show 'Slideshow' menu item<input type="checkbox" data-type="slideshows"/></label>
- <label>Run scripts in loaded pages<input type="checkbox" data-type="allowScripts"/></label>
- <label>Yielding<input type="checkbox" data-type="yielding"/></label>
-  <label>Log level <select id="loglevel">
-        <option value="2147483647" selected>None</option> 
-        <option value="2">Error</option>
-        <option value="1">Info</option>
-        <option value="0">Debug</option>
-</select></label>
- 
-    <input type="button" value="Save preferences" id="save-button"/>
-    <input type="button" value="Restore defaults" id="restore-button"/>
-
+ <label><input type="checkbox" id="slideshows"/>Show 'Slideshow' menu item</label>
     </section>
-    <script src="options.js" />
+        <script src="options.js"></script>
+
 <section>
 <h3>Credits</h3>
 <ul>

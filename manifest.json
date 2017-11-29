@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "version": "2017.10.12",
+  "version": "2017.11.29.1",
   "description": "__MSG_extensionDescription__",
   "homepage_url": "https://github.com/Mathnerd314/repagination/",
 
@@ -16,9 +16,8 @@
 
   "applications": {
     "gecko": {
-      "id": "{6072cb90-a0bd-11da-a746-0800200c9a66}",
-      "strict_min_version": "48.0",
-      "strict_max_version": "*"
+      "id": "repagination-fork-mathnerd314@github.com",
+      "strict_min_version": "48.0"
     }
   },
 

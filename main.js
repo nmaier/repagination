@@ -90,16 +90,13 @@ function createMenu(prefs) {
 }
 
 var defaultSettings = {
-  loglevel: "none",
   slideshows: false,
-  yielding: false,
-  allowScripts: false,
   exists: true // special pref to restore defaults
 };
 
 function prefReset(newSettings, areaName) {
   console.log("prefs changed")
-  if (areaName == "local" && ("slideshows" in newSettings)) {
+  if (areaName == "local" && ("exists" in newSettings)) {
     browser.contextMenus.removeAll();
     console.log("recreating menu")
     browser.storage.local.get().then(initSettings, onError);
@@ -118,14 +115,7 @@ function initSettings(prefs) {
 }
 
 function myinit(prefs) {
-  if (!("exists" in prefs) || !prefs.exists) {
-    browser.storage.onChanged.removeListener(prefReset);
-    browser.storage.local.set(defaultSettings);
-    browser.storage.onChanged.addListener(prefReset);
-    prefs = defaultSettings;
-  }
-  
-  createMenu(prefs);
+  initSettings(prefs);
 
   const PORTS = {};
 

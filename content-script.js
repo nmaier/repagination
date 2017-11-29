@@ -261,7 +261,7 @@ if(!("port" in this)) {
     loadNext: function R_loadNext(src, element, delay) {
       if (delay > 0) {
         console.log("delaying (sto) " + delay);
-        content.setTimeout(() => this.loadNext(src, element, 0), delay);
+        setTimeout(() => this.loadNext(src, element, 0), delay);
         return;
       }
 
@@ -290,12 +290,11 @@ if(!("port" in this)) {
         // Note: This is NOT a security mechanism, but a performance thing.
         Array.forEach(doc.querySelectorAll("script"),
                       s => s.parentNode.removeChild(s));
-        //yield true;
 
         // Do the dirty deed
-        // Note: same-origin checked; see above
         if (this.slideshow) {
           console.info("replacing content (slideshow)");
+          // this should be safe since innerHTML returns serialized HTML
           ownerDoc.body.innerHTML = doc.body.innerHTML;
           ownerDoc.body.setAttribute("repagination", "true");
         }
@@ -313,11 +312,9 @@ if(!("port" in this)) {
                 f.parentNode.removeChild(f);
               }
             });
-            //yield true;
           }
           for (let c = doc.body.firstChild; c; c = c.nextSibling) {
             ownerDoc.body.appendChild(ownerDoc.importNode(c, true));
-            //yield true;
           }
         }
 

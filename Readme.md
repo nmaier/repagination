@@ -1,12 +1,12 @@
 Re-Pagination
 ===
 
-This add-on is mostly a rewrite of the old re-pagination/antipagination extension for Firefox.
-Lev assigned ownership over to this project, so that this incarnation is now the official one.
+This add-on is an update of the old re-pagination/antipagination extension for Firefox 57+.
+Nils Maier has not assigned ownership over to this project, so this is still a fork.
 
 Features
 ===
 
-* Fully restartless
-* Should prevent some |jank|ing compared to the original extension
+* WebExtension compatible with Firefox Quantum
+* Compatible with more sites
 * All, limited and slideshow

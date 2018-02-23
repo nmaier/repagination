@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-console.info("main called!");
 
-var i = 0;
+const PORTS = {};
+const PENDING = {};
+const RUNNING = new Set();
 
 function onError(error) {
   console.error(error);
@@ -20,8 +21,6 @@ const MENU = {
 function onCreated(n) {
   if (browser.runtime.lastError) {
     console.error("Error creating menu item: %o", browser.runtime.lastError);
-  } else {
-    console.log(`Menu Item ${i++} created successfully`);
   }
 }
 
@@ -29,28 +28,20 @@ function createMenu(prefs) {
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1325758
   // insertbefore="context-sep-open"
   
-  i = 0;
-
   browser.contextMenus.create({
       id: MENU.NOLIMIT,
       title: browser.i18n.getMessage("repagination_nolimit"),
-      contexts: ["all"]
+      contexts: ["link"]
   }, onCreated);
 
-  browser.contextMenus.create({
-      id: MENU.LIMIT,
-      title: browser.i18n.getMessage("repagination_limit"),
-      contexts: ["all"]
-  }, onCreated);
+  let limits = [5,10,25,50,100];
 
-  const limits = [2,5,10,15,20,25,30,40,50,100];
-
-  for(let i in limits) {
+  for(let j in limits) {
+    let i = limits[j];
     browser.contextMenus.create({
-        id: MENU.LIMIT + "_" + limits[i],
-        parentId: MENU.LIMIT,
-        title: browser.i18n.getMessage("repagination_limit_x",limits[i]),
-        contexts: ["all"]
+        id: MENU.LIMIT + "_" + i,
+        title: browser.i18n.getMessage("repagination_limit_x",i),
+        contexts: ["link"]
     }, onCreated);
 
   }
@@ -59,34 +50,35 @@ function createMenu(prefs) {
     browser.contextMenus.create({
         id: MENU.SLIDE,
         title: browser.i18n.getMessage("repagination_slide"),
-        contexts: ["all"]
+        contexts: ["link"]
     }, onCreated);
 
-    const slides = [0,1,2,4,5,10,15,30,60,120];
+    let slides = [0,1,2,4,5,10,15,30,60,120];
 
-    for(let i in slides) {
+    for(let j in slides) {
+      let i = slides[j];
       browser.contextMenus.create({
           id: MENU.SLIDE + "_" + i,
           parentId: MENU.SLIDE,
-          title: [0,1,60,120].indexOf(i) != -1 ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",i),
-          contexts: ["all"]
+          title: ([0,1,60,120].indexOf(i) != -1) ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",i),
+          contexts: ["link"]
       }, onCreated);
     }
   }
 
-  browser.contextMenus.create({
-      id: MENU.STOP,
-      title: browser.i18n.getMessage("repagination_stop"),
-      contexts: ["all"]
-  }, onCreated);
+  updStop();
+}
 
-  /* https://bugzilla.mozilla.org/show_bug.cgi?id=1215376
-   gContextMenu.onLink && /^https?$/.test(gContextMenu.linkURI.scheme)) {
-          setMenuHidden(false);
-    if (!RUNNING.has(gContextMenu.frameOuterWindowID)) {
-      menuCurrent.stopMenu.hidden = true;
-    }
-    */
+function updStop() {
+  if(RUNNING.size > 0) {
+    browser.contextMenus.create({
+        id: MENU.STOP,
+        title: browser.i18n.getMessage("repagination_stop"),
+        contexts: ["all"]
+    }, onCreated);
+  } else {
+    browser.contextMenus.remove(MENU.STOP);
+  }
 }
 
 var defaultSettings = {
@@ -117,8 +109,6 @@ function initSettings(prefs) {
 function myinit(prefs) {
   initSettings(prefs);
 
-  const PORTS = {};
-
   function repaginate(tab, num, slideshow) {
     console.info("repaginate: " + num + "/" + slideshow);
     try {
@@ -129,6 +119,8 @@ function myinit(prefs) {
         allowScripts: prefs.allowScripts,
         yielding: prefs.yielding
       });
+      RUNNING.add(tab);
+      updStop();
     } catch (ex) {
       console.log(ex);
       console.error("failed to run repaginate");
@@ -162,7 +154,6 @@ function myinit(prefs) {
 
   // We lazily inject the main content script in a vague hope for efficiency
   // We use ports for messaging but have to store the messages until the port is opened.
-  const PENDING = {};
 
   browser.contextMenus.onClicked.addListener((info, tab) => {
     console.log(info, tab);
@@ -181,6 +172,17 @@ function myinit(prefs) {
     PORTS[tabid] = port;
     port.onDisconnect.addListener((p) => {
       delete PORTS[tabid];
+      delete PENDING[tabid];
+      RUNNING.delete(tabid);
+      updStop();
+    });
+    port.onMessage.addListener(msg => {
+      switch (msg.msg) {
+        case "unregister":
+          RUNNING.delete(tabid);
+          updStop();
+          break;
+      }
     });
 
     if (port.sender.tab.id in PENDING) {

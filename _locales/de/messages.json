@@ -1,35 +1,35 @@
 {
-  "displaySubmenu.label": {
+  "displaySubmenu_label": {
     "message": "Untermenü anzeigen"
   },
-  "displaySubmenu.desc": {
+  "displaySubmenu_desc": {
     "message": "Wenn diese Option aktiviert ist (Standard), dann wird Re-Pagination als Untermenü angezeigt anstatt die verschiedenen Aktionen direkt im Kontextmenü anzuzeigen."
   },
-  "showslideshow.label": {
+  "showslideshow_label": {
     "message": "'Slide-Show' Menüeintrag anzeigen"
   },
-  "showalldomain.label": {
+  "showalldomain_label": {
     "message": "'Alle Tabs der aktuellen Domain' Menüeintrag anzeigen"
   },
-  "loglevel.label": {
+  "loglevel_label": {
     "message": "Protokoll Stufe"
   },
-  "loglevel.desc": {
+  "loglevel_desc": {
     "message": "Die Nachrichten werden in der Fehlerkonsole protokolliert. Man sollte diese Einstellung auf 'Keine Protokollierung' belassen, wenn nicht anders angewiesen."
   },
-  "loglevel.none.label": {
+  "loglevel_none_label": {
     "message": "Keine Protokollierung"
   },
-  "loglevel.error.label": {
+  "loglevel_error_label": {
     "message": "Fehler protokollieren"
   },
-  "loglevel.info.label": {
+  "loglevel_info_label": {
     "message": "Fehler und Infos protokollieren"
   },
-  "loglevel.debug.label": {
+  "loglevel_debug_label": {
     "message": "Alles protokollieren!"
   },
-  "menu.label": {
+  "menu_label": {
     "message": "Re-Pagination"
   },
   "repagination_nolimit": {

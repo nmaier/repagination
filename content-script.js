@@ -297,6 +297,9 @@ Repaginator.prototype = {
       Array.forEach(doc.querySelectorAll("script"),
                     s => s.parentNode.removeChild(s));
 
+      Array.forEach(doc.querySelectorAll("style"),
+                    s => s.parentNode.removeChild(s));
+
       // Do the dirty deed
       if (this.slideshow) {
         console.info("replacing content (slideshow)");

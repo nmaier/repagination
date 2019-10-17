@@ -25,43 +25,42 @@ function onCreated(n) {
 }
 
 function createMenu(prefs) {
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1325758
-  // insertbefore="context-sep-open"
-  
-  browser.contextMenus.create({
+  let c = ["link"]; // ContextTypes for most menu items
+
+  browser.menus.create({
       id: MENU.NOLIMIT,
       title: browser.i18n.getMessage("repagination_nolimit"),
-      contexts: ["link"]
+      contexts: c
   }, onCreated);
 
   let limits = [5,10,25,50,100];
 
   for(let j in limits) {
     let i = limits[j];
-    browser.contextMenus.create({
+    browser.menus.create({
         id: MENU.LIMIT + "_" + i,
         title: browser.i18n.getMessage("repagination_limit_x",i),
-        contexts: ["link"]
+        contexts: c
     }, onCreated);
 
   }
-  
+
   if(prefs.slideshows) {
-    browser.contextMenus.create({
+    browser.menus.create({
         id: MENU.SLIDE,
         title: browser.i18n.getMessage("repagination_slide"),
-        contexts: ["link"]
+        contexts: c
     }, onCreated);
 
     let slides = [0,1,2,4,5,10,15,30,60,120];
 
     for(let j in slides) {
       let i = slides[j];
-      browser.contextMenus.create({
+      browser.menus.create({
           id: MENU.SLIDE + "_" + i,
           parentId: MENU.SLIDE,
           title: ([0,1,60,120].indexOf(i) != -1) ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",i),
-          contexts: ["link"]
+          contexts: c
       }, onCreated);
     }
   }
@@ -71,13 +70,13 @@ function createMenu(prefs) {
 
 function updStop() {
   if(RUNNING.size > 0) {
-    browser.contextMenus.create({
+    browser.menus.create({
         id: MENU.STOP,
         title: browser.i18n.getMessage("repagination_stop"),
         contexts: ["all"]
     }, onCreated);
   } else {
-    browser.contextMenus.remove(MENU.STOP);
+    browser.menus.remove(MENU.STOP);
   }
 }
 
@@ -89,7 +88,7 @@ var defaultSettings = {
 function prefReset(newSettings, areaName) {
   console.log("prefs changed")
   if (areaName == "local" && ("exists" in newSettings)) {
-    browser.contextMenus.removeAll();
+    browser.menus.removeAll();
     console.log("recreating menu")
     browser.storage.local.get().then(initSettings, onError);
   }
@@ -102,18 +101,42 @@ function initSettings(prefs) {
     browser.storage.onChanged.addListener(prefReset);
     prefs = defaultSettings;
   }
-  
+
   createMenu(prefs);
 }
 
 function myinit(prefs) {
   initSettings(prefs);
 
-  function repaginate(tab, num, slideshow) {
+  function process(info, tab) {
+    let str = info.menuItemId;
+
+    if(str == MENU.STOP) {
+      console.info("stop");
+      PORTS[tab].postMessage({
+          msg: "stop"
+      });
+      return;
+    }
+
+    let num, slideshow;
+    if(str == MENU.NOLIMIT) {
+      num = 0;
+      slideshow = false;
+    } else if(str.startsWith(MENU.LIMIT)) {
+      // https://stackoverflow.com/questions/5555518/split-variable-from-last-slash-jquery
+      num = parseInt(str.substring(str.lastIndexOf("_") + 1, str.length), 10);
+      slideshow = false;
+    } else if(str.startsWith(MENU.SLIDE)) {
+      num = parseInt(str.substring(str.lastIndexOf("_") + 1, str.length), 10);
+      slideshow = true;
+    }
+
     console.info("repaginate: " + num + "/" + slideshow);
     try {
       PORTS[tab].postMessage({
         msg: "normal",
+        target: info.targetElementId,
         num: num,
         slideshow: slideshow,
         allowScripts: prefs.allowScripts,
@@ -127,35 +150,10 @@ function myinit(prefs) {
     }
   }
 
-  function stop(tab) {
-    console.info("stop");
-    PORTS[tab].postMessage({
-        msg: "stop"
-    });
-  }
-
-  function process(info, tab) {
-    var str = info.menuItemId;
-    switch (str) {
-      case MENU.NOLIMIT: repaginate(tab); break;
-      case MENU.STOP: stop(tab); break;
-    }
-    
-    if(str.startsWith(MENU.LIMIT)) {
-      // https://stackoverflow.com/questions/5555518/split-variable-from-last-slash-jquery
-      var last = str.substring(str.lastIndexOf("_") + 1, str.length);
-      repaginate(tab, parseInt(last, 10), false);
-    }
-    if(str.startsWith(MENU.SLIDE)) {
-      var last = str.substring(str.lastIndexOf("_") + 1, str.length);
-      repaginate(tab, parseInt(last, 10), true);
-    }
-  }
-
   // We lazily inject the main content script in a vague hope for efficiency
   // We use ports for messaging but have to store the messages until the port is opened.
 
-  browser.contextMenus.onClicked.addListener((info, tab) => {
+  browser.menus.onClicked.addListener((info, tab) => {
     console.log(info, tab);
     if(tab.id in PORTS) {
       process(info, tab.id);

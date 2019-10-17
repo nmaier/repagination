@@ -10,7 +10,7 @@ let port = browser.runtime.connect();
 var focusElement = null;
 
 let _ = function () {
-  let args = Array.map(arguments, e => e.toString());
+  let args = Array.from(arguments).map(e => e.toString());
   return browser.i18n.getMessage(args[0], args.slice(1));
 }
 
@@ -23,7 +23,7 @@ let equalLinks = (left, right) =>
 let getFirstSnapshot = (doc, node, query) =>
   doc.evaluate(query, node, null, 7, null).snapshotItem(0);
 
-let createFrame = (srcurl, allowScripts, loadFun) => {
+let createPageRequest = (srcurl, allowScripts, loadFun) => {
   let errorCount = 0;
   function sendRequest() {
     var xhr = new XMLHttpRequest();
@@ -249,7 +249,7 @@ Repaginator.prototype = {
         throw new Error("no node");
       }
       document.body.setAttribute("repagination", "true");
-      createFrame(node.href, this.allowScripts, frame => {
+      createPageRequest(node.href, this.allowScripts, frame => {
         this.loadNext(node.href, frame, 0);
       });
     }
@@ -294,11 +294,8 @@ Repaginator.prototype = {
       // Duplicate scripts would cause more havoc (performance-wise) than
       // behaviour failures due to missing scripts
       // Note: This is NOT a security mechanism, but a performance thing.
-      Array.forEach(doc.querySelectorAll("script"),
-                    s => s.parentNode.removeChild(s));
-
-      Array.forEach(doc.querySelectorAll("style"),
-                    s => s.parentNode.removeChild(s));
+      doc.querySelectorAll("script").forEach(s => s.parentNode.removeChild(s));
+      doc.querySelectorAll("style").forEach(s => s.parentNode.removeChild(s));
 
       // Do the dirty deed
       if (this.slideshow) {
@@ -315,7 +312,7 @@ Repaginator.prototype = {
         if (!this.pageLimit || this.pageLimit > 10) {
           console.info("removing non-same-origin iframes to avoid dupes");
           let host = ownerDoc.defaultView.location.hostName;
-          Array.forEach(doc.querySelectorAll("iframe"), function(f) {
+          doc.querySelectorAll("iframe").forEach(function(f) {
             var url = new URL(f.src, ownerDoc.defaultView.location.href);
             if (url.hostname != host) {
               f.parentNode.removeChild(f);
@@ -367,7 +364,7 @@ Repaginator.prototype = {
 
       this.setTitle();
       console.info("next please: " + nexturl);
-      createFrame(nexturl, this.allowScripts, frame => {
+      createPageRequest(nexturl, this.allowScripts, frame => {
         if (this.slideshow && this.seconds) {
           console.info("slideshow; delay: " + this.seconds * 1000);
           this.loadNext(nexturl, frame, this.seconds * 1000);
@@ -397,12 +394,11 @@ let Slideshow = function Slideshow(seconds, allowScripts, yielding) {
 };
 Slideshow.prototype = Repaginator.prototype;
 
-let repaginate = (num, slideshow, allowScripts, yielding) => {
+let repaginate = (target, num, slideshow, allowScripts, yielding) => {
   try {
     let Ctor = slideshow ? Slideshow : Repaginator;
     let rep;
-    // c.f. clicked_element.js
-    focusElement = clickedEl;
+    focusElement = browser.menus.getTargetElement(target);
     rep = new Ctor(num, allowScripts, yielding);
     rep.buildQuery(focusElement);
     rep.repaginate();
@@ -426,7 +422,7 @@ let stop = () => {
 
 port.onMessage.addListener(msg => {
   switch (msg.msg) {
-  case "normal": repaginate(msg.num, msg.slideshow, msg.allowScripts, msg.yielding); break;
+  case "normal": repaginate(msg.target, msg.num, msg.slideshow, msg.allowScripts, msg.yielding); break;
   case "stop" : stop(); break;
   }
 });

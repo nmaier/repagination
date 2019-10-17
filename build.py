@@ -50,9 +50,9 @@ class ZipOutFile(ZipFile):
         self.close()
 
 
-if os.path.exists(destination):
-    print >>sys.stderr, destination, "is in the way"
-    sys.exit(1)
+# if os.path.exists(destination):
+    # print >>sys.stderr, destination, "is in the way"
+    # sys.exit(1)
 
 with Minor(), ZipOutFile(destination) as zp:
     for f in sorted(get_files(resources), key=str.lower):

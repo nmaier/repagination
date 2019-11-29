@@ -1,0 +1,85 @@
+{
+  "displaySubmenu_label": {
+    "message": "Untermenü anzeigen"
+  },
+  "displaySubmenu_desc": {
+    "message": "Wenn diese Option aktiviert ist (Standard), dann wird Re-Pagination als Untermenü angezeigt anstatt die verschiedenen Aktionen direkt im Kontextmenü anzuzeigen."
+  },
+  "showslideshow_label": {
+    "message": "'Slide-Show' Menüeintrag anzeigen"
+  },
+  "showalldomain_label": {
+    "message": "'Alle Tabs der aktuellen Domain' Menüeintrag anzeigen"
+  },
+  "loglevel_label": {
+    "message": "Protokoll Stufe"
+  },
+  "loglevel_desc": {
+    "message": "Die Nachrichten werden in der Fehlerkonsole protokolliert. Man sollte diese Einstellung auf 'Keine Protokollierung' belassen, wenn nicht anders angewiesen."
+  },
+  "loglevel_none_label": {
+    "message": "Keine Protokollierung"
+  },
+  "loglevel_error_label": {
+    "message": "Fehler protokollieren"
+  },
+  "loglevel_info_label": {
+    "message": "Fehler und Infos protokollieren"
+  },
+  "loglevel_debug_label": {
+    "message": "Alles protokollieren!"
+  },
+  "menu_label": {
+    "message": "Re-Pagination"
+  },
+  "repagination_nolimit": {
+    "message": "Alle laden"
+  },
+  "repagination_nolimit_domain": {
+    "message": "'Alle Tabs der aktuellen Domain'"
+  },
+  "repagination_limit": {
+    "message": "Begrenzt"
+  },
+  "repagination_slide": {
+    "message": "Slide-Show"
+  },
+  "repagination_slide_0": {
+    "message": "Sofort"
+  },
+  "repagination_slide_1": {
+    "message": "1 Sekunde"
+  },
+  "repagination_slide_60": {
+    "message": "1 Minute"
+  },
+  "repagination_stop": {
+    "message": "Stoppen!"
+  },
+  "repagination_limit_x": {
+    "message": "%S Seiten"
+  },
+  "repagination_slide_120": {
+    "message": "2 Minuten"
+  },
+  "repagination_slide_x": {
+    "message": "%S Sekunden"
+  },
+
+  "repagination_limited": {
+    "message": "(%S of %S) Re-Pagination arbeitet..."
+  },
+  "repagination_unlimited": {
+    "message": "(%S) Re-Pagination arbeitet..."
+  },
+  "repagination_running": {
+    "message": "Re-Pagination arbeitet..."
+  },
+
+  "extensionName": {
+    "message": "Re-Pagination"
+  },
+  "extensionDescription": {
+    "message": "Alle fortlaufenden Seiten in einem einzigem Tab auf einmal laden"
+  }
+}

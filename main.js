@@ -3,271 +3,198 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {registerOverlay, unloadWindow} = require("sdk/windows");
-
+const PORTS = {};
+const PENDING = {};
 const RUNNING = new Set();
-const globalMM = Cc["@mozilla.org/globalmessagemanager;1"].
-                 getService(Ci.nsIMessageListenerManager);
 
-function registerRunning(m) {
-  RUNNING.add(m.data.id);
-  log(LOG_DEBUG, `added ${m.data.id} to running`);
+function onError(error) {
+  console.error(error);
 }
 
-function unregisterRunning(m) {
-  RUNNING.delete(m.data.id);
-  log(LOG_DEBUG, `removed ${m.data.id} from running`);
+const MENU = {
+    NOLIMIT: 'REPAGINATION_NOLIMIT',
+    LIMIT: 'REPAGINATION_LIMIT',
+    SLIDE: 'REPAGINATION_SLIDE',
+    STOP: 'REPAGINATION_STOP'
 }
-globalMM.addMessageListener("repagination:register", registerRunning);
-globalMM.addMessageListener("repagination:unregister", unregisterRunning);
-unload(() => {
-  globalMM.removeMessageListener("repagination:register", registerRunning);
-  globalMM.removeMessageListener("repagination:unregister", unregisterRunning);
-});
 
-/* globals _ */
-lazy(this, "_", function() {
-  let bundle = require("sdk/strings").
-    getBundle("chrome://repagination/locale/repagination.properties");
-  return function() {
-    return bundle.getString.apply(bundle, arguments);
-  };
-});
-
-function checkSameOrigin(principal, tryLoadUri) {
-  try {
-    if (!(tryLoadUri instanceof Ci.nsIURI)) {
-      tryLoadUri = Services.io.newURI(tryLoadUri, null, null);
-    }
-    if (tryLoadUri.schemeIs("data")) {
-      return true;
-    }
-    principal.checkMayLoad(tryLoadUri, false, true);
-    return true;
-  }
-  catch (ex) {
-    log(LOG_DEBUG, "denied load of " + (tryLoadUri.spec || tryLoadUri), ex);
-    return false;
+function onCreated(n) {
+  if (browser.runtime.lastError) {
+    console.error("Error creating menu item: %o", browser.runtime.lastError);
   }
 }
 
-function main(window, document) {
-  const $ = id => document.getElementById(id);
-  const $$$ = q => document.querySelectorAll(q);
+function createMenu(prefs) {
+  let c = ["link"]; // ContextTypes for most menu items
 
-  function repaginate(num, slideshow) {
-    log(LOG_INFO, "repaginate: " + num + "/" + slideshow);
+  browser.menus.create({
+      id: MENU.NOLIMIT,
+      title: browser.i18n.getMessage("repagination_nolimit"),
+      contexts: c
+  }, onCreated);
+
+  let limits = [5,10,25,50,100];
+
+  for(let j in limits) {
+    let i = limits[j];
+    browser.menus.create({
+        id: MENU.LIMIT + "_" + i,
+        title: browser.i18n.getMessage("repagination_limit_x",i),
+        contexts: c
+    }, onCreated);
+
+  }
+
+  if(prefs.slideshows) {
+    browser.menus.create({
+        id: MENU.SLIDE,
+        title: browser.i18n.getMessage("repagination_slide"),
+        contexts: c
+    }, onCreated);
+
+    let slides = [0,1,2,4,5,10,15,30,60,120];
+
+    for(let j in slides) {
+      let i = slides[j];
+      browser.menus.create({
+          id: MENU.SLIDE + "_" + i,
+          parentId: MENU.SLIDE,
+          title: ([0,1,60,120].indexOf(i) != -1) ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",i),
+          contexts: c
+      }, onCreated);
+    }
+  }
+
+  updStop();
+}
+
+function updStop() {
+  if(RUNNING.size > 0) {
+    browser.menus.create({
+        id: MENU.STOP,
+        title: browser.i18n.getMessage("repagination_stop"),
+        contexts: ["all"]
+    }, onCreated);
+  } else {
+    browser.menus.remove(MENU.STOP);
+  }
+}
+
+var defaultSettings = {
+  slideshows: false,
+  exists: true // special pref to restore defaults
+};
+
+function prefReset(newSettings, areaName) {
+  console.log("prefs changed")
+  if (areaName == "local" && ("exists" in newSettings)) {
+    browser.menus.removeAll();
+    console.log("recreating menu")
+    browser.storage.local.get().then(initSettings, onError);
+  }
+}
+
+function initSettings(prefs) {
+  if (!("exists" in prefs) || !prefs.exists) {
+    browser.storage.onChanged.removeListener(prefReset);
+    browser.storage.local.set(defaultSettings);
+    browser.storage.onChanged.addListener(prefReset);
+    prefs = defaultSettings;
+  }
+
+  createMenu(prefs);
+}
+
+function myinit(prefs) {
+  initSettings(prefs);
+
+  function process(info, tab) {
+    let str = info.menuItemId;
+
+    if(str == MENU.STOP) {
+      console.info("stop");
+      PORTS[tab].postMessage({
+          msg: "stop"
+      });
+      return;
+    }
+
+    let num, slideshow;
+    if(str == MENU.NOLIMIT) {
+      num = 0;
+      slideshow = false;
+    } else if(str.startsWith(MENU.LIMIT)) {
+      // https://stackoverflow.com/questions/5555518/split-variable-from-last-slash-jquery
+      num = parseInt(str.substring(str.lastIndexOf("_") + 1, str.length), 10);
+      slideshow = false;
+    } else if(str.startsWith(MENU.SLIDE)) {
+      num = parseInt(str.substring(str.lastIndexOf("_") + 1, str.length), 10);
+      slideshow = true;
+    }
+
+    console.info("repaginate: " + num + "/" + slideshow);
     try {
-      let mm = window.gBrowser.selectedBrowser.messageManager;
-      mm.sendAsyncMessage("repagination:normal", {
+      PORTS[tab].postMessage({
+        msg: "normal",
+        target: info.targetElementId,
         num: num,
         slideshow: slideshow,
-        allowScripts: prefs.get("allowscripts", true),
+        allowScripts: prefs.allowScripts,
         yielding: prefs.yielding
       });
-    }
-    catch (ex) {
-      log(LOG_ERROR, "failed to run repaginate", ex);
-    }
-  }
-
-  function repaginate_domain() {
-    log(LOG_INFO, "repaginate_domain");
-    try {
-      let mm = window.gBrowser.selectedBrowser.messageManager;
-      let queried = m => {
-        mm.removeMessageListener("repagination:query", queried);
-        log(LOG_DEBUG, "recv query " + m.data);
-        if (!m.data) {
-          return;
-        }
-        const host = window.gBrowser.selectedBrowser.currentURI.host;
-        for (let i = 0; i < window.gBrowser.browsers.length; ++i) {
-          let browser = window.gBrowser.getBrowserAtIndex(i);
-          if (!browser) {
-            continue;
-          }
-          if (browser.currentURI.host != host) {
-            continue;
-          }
-          browser.messageManager.sendAsyncMessage("repagination:normal", {
-            num: 0,
-            slideshow: false,
-            allowScripts: prefs.get("allowscripts", true),
-            yielding: prefs.yielding,
-            query: m.data
-          });
-        }
-      };
-      mm.addMessageListener("repagination:query", queried);
-      mm.sendAsyncMessage("repagination:query");
-    }
-    catch (ex) {
-      log(LOG_ERROR, "failed to run repaginate_domain", ex);
+      RUNNING.add(tab);
+      updStop();
+    } catch (ex) {
+      console.log(ex);
+      console.error("failed to run repaginate");
     }
   }
 
-  function stop() {
-    log(LOG_INFO, "stop");
-    let mm = window.gBrowser.selectedBrowser.messageManager;
-    mm.sendAsyncMessage("repagination:stop");
-  }
+  // We lazily inject the main content script in a vague hope for efficiency
+  // We use ports for messaging but have to store the messages until the port is opened.
 
-  function onAll() { repaginate(); }
-  function onAllDomain() { repaginate_domain(); }
-  function onStop() { stop(); }
-  function onLimitCommand(evt) {
-    let t = evt.target;
-    if (t.localName != "menuitem") {
-      return;
+  browser.menus.onClicked.addListener((info, tab) => {
+    console.log(info, tab);
+    if(tab.id in PORTS) {
+      process(info, tab.id);
+    } else {
+      console.log("injecting " + tab.id);
+      browser.tabs.executeScript(tab.id, { file: "content-script.js" } );
+      PENDING[tab.id] = info;
     }
-    repaginate(parseInt(t.getAttribute("value"), 10));
-  }
-  function onSlideCommand(evt) {
-    let t = evt.target;
-    if (t.localName != "menuitem") {
-      return;
-    }
-    repaginate(parseInt(t.getAttribute("value"), 10), true);
-  }
-
-  log(LOG_INFO, "main called!");
-
-  let frameToLog = m => log(m.data.level, m.data.message, m.data.exception);
-  let frameL10N = m => {
-    return _.apply(null, m.data.arguments);
-  };
-  window.messageManager.addMessageListener("repagination:log", frameToLog);
-  window.messageManager.addMessageListener("repagination:_", frameL10N);
-  let fs = "chrome://repagination/content/content-script.js?" + (+new Date());
-  window.messageManager.loadFrameScript(fs, true);
-  unloadWindow(window, () => {
-    window.messageManager.broadcastAsyncMessage("repagination:shutdown");
-    window.messageManager.removeMessageListener("repagination:log", frameToLog);
-    window.messageManager.removeMessageListener("repagination:_", frameL10N);
-    window.messageManager.removeDelayedFrameScript(fs);
   });
 
-  // finish the localization
-  let nodes = $$$(":-moz-any(#repagination_limit, " +
-                  "#repagination_menu_limit) menuitem");
-  for (let n of nodes) {
-    n.setAttribute("label", _("pages.label", n.getAttribute("value")));
-  }
-  nodes = $$$(":-moz-any(#repagination_slide, #repagination_menu_slide) " +
-              "menuitem:not([label])");
-  for (let n of nodes) {
-    let s = parseInt(n.getAttribute("value"), 10);
-    if (s < 60) { 
-      n.setAttribute("label", _("seconds.label", s));
-    }
-    else {
-      n.setAttribute("label", _("minutes.label", parseInt(s / 60, 10)));
-    }
-  }
-  let contextMenu = $("contentAreaContextMenu");
 
-  let menuCascaded = {
-    menu: $("repagination_menu"),
-    allMenu: $("repagination_menu_nolimit"),
-    allDomainMenu: $("repagination_menu_nolimit_domain"),
-    stopMenu: $("repagination_menu_stop"),
-    limitMenu: $("repagination_menu_limit"),
-    slideMenu: $("repagination_menu_slide")
-  };
-  let menuPlain = {
-    menu: {},
-    allMenu: $("repagination_nolimit"),
-    allDomainMenu: $("repagination_nolimit_domain"),
-    stopMenu: $("repagination_stop"),
-    limitMenu: $("repagination_limit"),
-    slideMenu: $("repagination_slide")
-  };
-  let menuCurrent;
-
-  prefs.observe("submenu", function(pref, value) {
-    menuCurrent = value ? menuCascaded : menuPlain;
-    let menuDisabled = value ? menuPlain : menuCascaded;
-    for (let [,mi] in new Iterator(menuDisabled)) {
-      mi.hidden = true;
-    }
-  }, true);
-
-  let onContextMenu = function onContextMenu() {
-    function setMenuHidden(hidden) {
-      log(LOG_DEBUG, "set menu hidden = " + hidden);
-    for (let [,mi] in new Iterator(menuCurrent)) {
-        mi.hidden = hidden;
+  browser.runtime.onConnect.addListener(function(port) {
+    let tabid = port.sender.tab.id;
+    PORTS[tabid] = port;
+    port.onDisconnect.addListener((p) => {
+      delete PORTS[tabid];
+      delete PENDING[tabid];
+      RUNNING.delete(tabid);
+      updStop();
+    });
+    port.onMessage.addListener(msg => {
+      switch (msg.msg) {
+        case "unregister":
+          RUNNING.delete(tabid);
+          updStop();
+          break;
       }
-      menuCurrent.slideMenu.hidden =
-        menuCurrent.slideMenu.hidden || !prefs.showslideshow;
-      menuCurrent.allDomainMenu.hidden =
-        menuCurrent.allDomainMenu.hidden || !prefs.showalldomain;
-    }
+    });
 
-    let {gContextMenu} = window;
-    log(LOG_DEBUG, `context menu showing for ${gContextMenu.frameOuterWindowID}!`);
-    try {
-      if (gContextMenu.onLink && /^https?$/.test(gContextMenu.linkURI.scheme)) {
-        setMenuHidden(!checkSameOrigin(gContextMenu.principal,
-                                       gContextMenu.linkURL));
-        if (!RUNNING.has(gContextMenu.frameOuterWindowID)) {
-          menuCurrent.stopMenu.hidden = true;
-        }
-        return;
-      }
+    if (port.sender.tab.id in PENDING) {
+      var info = PENDING[port.sender.tab.id];
+      delete PENDING[port.sender.tab.id];
+      process(info, port.sender.tab.id);
     }
-    catch (ex) {
-      log(LOG_ERROR, "failed to setup menu (onLink)", ex);
-    }
-    try {
-      setMenuHidden(true);
-      if (RUNNING.has(gContextMenu.frameOuterWindowID)) {
-        menuCurrent.menu.hidden = menuCurrent.stopMenu.hidden = false;
-      }
-    }
-    catch (ex) {
-      log(LOG_ERROR, "failed to setup menu (plain)", ex);
-    }
-  };
-
-  contextMenu.addEventListener("popupshowing", onContextMenu, true);
-  menuCascaded.allMenu.addEventListener("command", onAll, true);
-  menuPlain.allMenu.addEventListener("command", onAll, true);
-  menuCascaded.allDomainMenu.addEventListener("command", onAllDomain, true);
-  menuPlain.allDomainMenu.addEventListener("command", onAllDomain, true);
-  menuCascaded.stopMenu.addEventListener("command", onStop, true);
-  menuPlain.stopMenu.addEventListener("command", onStop, true);
-  menuCascaded.limitMenu.addEventListener("command", onLimitCommand, true);
-  menuPlain.limitMenu.addEventListener("command", onLimitCommand, true);
-  menuCascaded.slideMenu.addEventListener("command", onSlideCommand, true);
-  menuPlain.slideMenu.addEventListener("command", onSlideCommand, true);
-  unloadWindow(window, function() {
-    contextMenu.removeEventListener("popuphowing", onContextMenu, true);
-    menuCascaded.allMenu.removeEventListener("command", onAll, true);
-    menuPlain.allMenu.removeEventListener("command", onAll, true);
-    menuCascaded.allDomainMenu.removeEventListener("command", onAllDomain,
-                                                   true);
-    menuPlain.allDomainMenu.removeEventListener("command", onAllDomain, true);
-    menuCascaded.stopMenu.removeEventListener("command", onStop, true);
-    menuPlain.stopMenu.removeEventListener("command", onStop, true);
-    menuCascaded.limitMenu.removeEventListener("command", onLimitCommand, true);
-    menuPlain.limitMenu.removeEventListener("command", onLimitCommand, true);
-    menuCascaded.slideMenu.removeEventListener("command", onSlideCommand, true);
-    menuPlain.slideMenu.removeEventListener("command", onSlideCommand, true);
-    contextMenu = menuPlain = menuCascaded = null;
   });
-  log(LOG_INFO, "all good!");
 }
-registerOverlay(
-  "repagination.xul",
-  "chrome://browser/content/browser.xul",
-  main
-);
-registerOverlay(
-  "repagination.xul",
-  "chrome://navigator/content/navigator.xul",
-  main
-);
+
+browser.storage.local.get().then(myinit, onError);
+
+browser.storage.onChanged.addListener(prefReset);
+
+console.info("all good!");
 
 /* vim: set et ts=2 sw=2 : */

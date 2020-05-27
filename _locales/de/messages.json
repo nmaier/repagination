@@ -57,20 +57,20 @@
     "message": "Stoppen!"
   },
   "repagination_limit_x": {
-    "message": "%S Seiten"
+    "message": "$1 Seiten"
   },
   "repagination_slide_120": {
     "message": "2 Minuten"
   },
   "repagination_slide_x": {
-    "message": "%S Sekunden"
+    "message": "$1 Sekunden"
   },
 
   "repagination_limited": {
-    "message": "(%S of %S) Re-Pagination arbeitet..."
+    "message": "($1 of $2) Re-Pagination arbeitet..."
   },
   "repagination_unlimited": {
-    "message": "(%S) Re-Pagination arbeitet..."
+    "message": "($1) Re-Pagination arbeitet..."
   },
   "repagination_running": {
     "message": "Re-Pagination arbeitet..."

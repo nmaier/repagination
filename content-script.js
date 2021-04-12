@@ -229,15 +229,14 @@ Repaginator.prototype = {
       document.title = _("repagination_running");
     }
   },
-  restoreTitle: function R_restoreTitle() {
+  finished: function R_finished() {
+    port.postMessage({msg: "finished"});
+    stop();
+    // restore title
     if("_title" in this) {
       document.title = this._title;
       delete this._title;
     }
-  },
-  unregister: function R_unregister() {
-    port.postMessage({msg: "unregister"});
-    document.body.removeAttribute("repagination");
   },
   repaginate: function R_repaginate() {
     this._title = document.title;
@@ -252,10 +251,8 @@ Repaginator.prototype = {
       createPageRequest(node.href, this.allowScripts, frame => {
         this.loadNext(node.href, frame, 0);
       });
-    }
-    catch (ex) {
-      this.unregister();
-      this.restoreTitle();
+    } catch (ex) {
+      this.finished();
       console.error("repaginate failed", ex);
     }
   },
@@ -275,6 +272,7 @@ Repaginator.prototype = {
       this._loadNext_gen.bind(this, src, element)();
     } catch (ex) {
       console.error("failed to process loadNext (non-yielding)", ex);
+      this.finished();
     }
     return;
   },
@@ -378,8 +376,7 @@ Repaginator.prototype = {
     catch (ex) {
       console.log(ex);
       console.info("loadNext complete");
-      this.unregister();
-      this.restoreTitle();
+      this.finished();
     }
   }
 };
@@ -402,8 +399,7 @@ let repaginate = (target, num, slideshow, allowScripts, yielding) => {
     rep = new Ctor(num, allowScripts, yielding);
     rep.buildQuery(focusElement);
     rep.repaginate();
-  }
-  catch (ex) {
+  } catch (ex) {
     console.error("Failed to run repaginate", ex);
   }
 };
@@ -414,8 +410,7 @@ let stop = () => {
     if (body) {
       body.removeAttribute("repagination");
     }
-  }
-  catch (ex) {
+  } catch (ex) {
     console.error("failed to stop repagination", ex);
   }
 };
@@ -429,8 +424,13 @@ port.onMessage.addListener(msg => {
 
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1370368
 window.addEventListener('pagehide', function(event) {
-  port.disconnect();
+  stop();
+  try {
+    port.disconnect();
+  } catch (ex) {
+    console.log(ex)
+  }
 });
 
-}  
+}
 /* vim: set et ts=2 sw=2 : */

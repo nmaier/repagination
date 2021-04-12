@@ -39,7 +39,7 @@ function createMenu(prefs) {
     let i = limits[j];
     browser.menus.create({
         id: MENU.LIMIT + "_" + i,
-        title: browser.i18n.getMessage("repagination_limit_x",i),
+        title: browser.i18n.getMessage("repagination_limit_x",[i]),
         contexts: c
     }, onCreated);
 
@@ -59,7 +59,7 @@ function createMenu(prefs) {
       browser.menus.create({
           id: MENU.SLIDE + "_" + i,
           parentId: MENU.SLIDE,
-          title: ([0,1,60,120].indexOf(i) != -1) ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",i),
+          title: ([0,1,60,120].indexOf(i) != -1) ? browser.i18n.getMessage("repagination_slide_" + i) : browser.i18n.getMessage("repagination_slide_x",[i]),
           contexts: c
       }, onCreated);
     }
@@ -68,15 +68,19 @@ function createMenu(prefs) {
   updStop();
 }
 
+var added = false;
+
 function updStop() {
-  if(RUNNING.size > 0) {
+  if(RUNNING.size > 0 && !added) {
     browser.menus.create({
         id: MENU.STOP,
         title: browser.i18n.getMessage("repagination_stop"),
         contexts: ["all"]
     }, onCreated);
-  } else {
+    added = true;
+  } else if(added) {
     browser.menus.remove(MENU.STOP);
+    added = false;
   }
 }
 
@@ -147,6 +151,9 @@ function myinit(prefs) {
     } catch (ex) {
       console.log(ex);
       console.error("failed to run repaginate");
+      delete PORTS[tabid];
+      delete PENDING[tabid];
+      RUNNING.delete(tabid);
     }
   }
 
@@ -176,7 +183,7 @@ function myinit(prefs) {
     });
     port.onMessage.addListener(msg => {
       switch (msg.msg) {
-        case "unregister":
+        case "finished":
           RUNNING.delete(tabid);
           updStop();
           break;
